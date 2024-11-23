@@ -1,3 +1,5 @@
+// src/schema.ts
+
 import { z } from "zod";
 import { BlockableResources, Timezones, IpCountries } from "./types";
 

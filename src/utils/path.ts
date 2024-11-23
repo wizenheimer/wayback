@@ -1,3 +1,5 @@
+// src/utils/path.ts
+
 import { createHash } from "crypto";
 
 // Helper to get content path

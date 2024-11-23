@@ -1,3 +1,5 @@
+// src/utils/initializer.ts
+
 import { ScreenshotService } from "../service/screenshot";
 import { StorageService } from "../service/storage";
 

@@ -1,3 +1,5 @@
+// src/service/screenshot.ts
+
 import { ScreenshotOptions, ScreenshotMetadata } from "../types";
 import { createScreenshotUrl } from "../utils/url";
 import { cleanHtmlContent } from "../utils/content";

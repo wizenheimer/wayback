@@ -1,3 +1,5 @@
+// src/index.ts
+
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { Bindings, ScreenshotOptions } from "./types";

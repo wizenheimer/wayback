@@ -1,3 +1,5 @@
+// src/service/storage.ts
+
 import { generatePathHash, getDatePath } from "../utils/path";
 
 export class StorageService {

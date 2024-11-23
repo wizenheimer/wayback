@@ -1,3 +1,5 @@
+// src/utils/log.ts
+
 // logging function
 export const _ = (...messages: any[]) => {
   // make json log with timestamp
