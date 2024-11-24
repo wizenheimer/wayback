@@ -1,5 +1,4 @@
 // src/schema.ts
-
 import { z } from "zod";
 import { BlockableResources, Timezones, IpCountries } from "./types";
 
@@ -126,9 +125,25 @@ const getScreenshotParamSchema = z.object({
   date: z.string().length(8).regex(/^\d+$/),
 });
 
+const diffRequestSchema = z.object({
+  url: z.string().url(),
+  timestamp1: z.string().length(8).regex(/^\d+$/),
+  timestamp2: z.string().length(8).regex(/^\d+$/),
+});
+
+// Schema for history query parameters
+const historyQuerySchema = z.object({
+  url: z.string().url(),
+  from: z.string().length(8).regex(/^\d+$/).optional(),
+  to: z.string().length(8).regex(/^\d+$/).optional(),
+  limit: z.coerce.number().min(1).max(100).optional(),
+});
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
   getScreenshotQuerySchema,
   screenshotSchema,
+  diffRequestSchema,
+  historyQuerySchema,
 };

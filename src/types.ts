@@ -1,4 +1,5 @@
 // src/types.ts
+import { zodResponseFormat } from "openai/helpers/zod";
 
 export type ClipOptions = {
   x?: number;
@@ -265,4 +266,15 @@ export type Bindings = {
   SCREENSHOT_SERVICE_ORIGIN: string;
   ARCHIVE_API_TOKEN: string;
   archive: R2Bucket;
+  DB: D1Database;
+  OPENAI_API_KEY: string;
 };
+
+export interface DiffAnalysis {
+  branding: string[];
+  integration: string[];
+  pricing: string[];
+  product: string[];
+  positioning: string[];
+  partnership: string[];
+}

@@ -26,6 +26,7 @@ enabled = true
 SCREENSHOT_SERVICE_API_KEY = "some-api-key"
 SCREENSHOT_SERVICE_ORIGIN = "https://api.screenshotone.com"
 ARCHIVE_API_TOKEN = "some-api-token"
+OPENAI_API_KEY = "some-api-key"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
@@ -44,10 +45,10 @@ ARCHIVE_API_TOKEN = "some-api-token"
 
 # Bind a D1 database. D1 is Cloudflare’s native serverless SQL database.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#d1-databases
-# [[d1_databases]]
-# binding = "MY_DB"
-# database_name = "my-database"
-# database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+[[d1_databases]]
+binding = "DB"
+database_name = "diff"
+database_id = "9d2e1ab5-06ce-4a8d-b741-024e9efc0f3b"
 
 # Bind a dispatch namespace. Use Workers for Platforms to deploy serverless functions programmatically on behalf of your customers.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#dispatch-namespace-bindings-workers-for-platforms
