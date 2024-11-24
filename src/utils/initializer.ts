@@ -3,6 +3,7 @@ import { DBService } from "../service/db";
 import { ScreenshotService } from "../service/screenshot";
 import { StorageService } from "../service/storage";
 import { AIService } from "../service/ai";
+import { CompetitorService } from "../service/competitor";
 
 const initializeServices = (c: any) => {
   const storage = new StorageService(c.env.archive);
@@ -11,9 +12,10 @@ const initializeServices = (c: any) => {
     c.env.SCREENSHOT_SERVICE_ORIGIN,
     storage
   );
-  const db = new DBService(c.env.DB);
+  const diffDB = new DBService(c.env.DIFF_DB);
   const ai = new AIService(c.env.OPENAI_API_KEY);
-  return { storage, screenshot, db, ai };
+  const competitor = new CompetitorService(c.env.COMPETITOR_DB);
+  return { storage, screenshot, diffDB, ai, competitor };
 };
 
 export { initializeServices };
