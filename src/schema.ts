@@ -1,5 +1,4 @@
 // src/schema.ts
-
 import { z } from "zod";
 import { BlockableResources, Timezones, IpCountries } from "./types";
 
@@ -126,9 +125,44 @@ const getScreenshotParamSchema = z.object({
   date: z.string().length(8).regex(/^\d+$/),
 });
 
+const diffRequestSchema = z.object({
+  url: z.string().url(),
+  timestamp1: z.string().length(8).regex(/^\d+$/),
+  timestamp2: z.string().length(8).regex(/^\d+$/),
+});
+
+// Schema for history query parameters
+const historyQuerySchema = z.object({
+  url: z.string().url(),
+  from: z.string().length(8).regex(/^\d+$/).optional(),
+  to: z.string().length(8).regex(/^\d+$/).optional(),
+  limit: z.coerce.number().min(1).max(100).optional(),
+});
+
+const reportRequestSchema = z
+  .object({
+    urls: z.array(z.string().url()).min(1).max(100),
+    timestamp1: z.string().length(8).regex(/^\d+$/).optional(),
+    timestamp2: z.string().length(8).regex(/^\d+$/).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.timestamp1 && data.timestamp2) {
+        return data.timestamp1 <= data.timestamp2;
+      }
+      return true;
+    },
+    {
+      message: "timestamp1 must be earlier than or equal to timestamp2",
+    }
+  );
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
   getScreenshotQuerySchema,
   screenshotSchema,
+  diffRequestSchema,
+  historyQuerySchema,
+  reportRequestSchema,
 };

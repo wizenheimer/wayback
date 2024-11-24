@@ -265,4 +265,79 @@ export type Bindings = {
   SCREENSHOT_SERVICE_ORIGIN: string;
   ARCHIVE_API_TOKEN: string;
   archive: R2Bucket;
+  DB: D1Database;
+  OPENAI_API_KEY: string;
 };
+
+export interface DiffAnalysis {
+  branding: string[];
+  integration: string[];
+  pricing: string[];
+  product: string[];
+  positioning: string[];
+  partnership: string[];
+}
+
+export interface ReportRequest {
+  urls: string[];
+  timestamp1?: string; // optional, will use most recent if not provided
+  timestamp2?: string; // optional, will use second most recent if not provided
+}
+
+export interface DiffReport {
+  url: string;
+  timestamp1: string;
+  timestamp2: string;
+  differences: DiffAnalysis;
+  metadata?: {
+    pageTitle?: string;
+    lastUpdated?: string;
+  };
+}
+
+export interface AggregatedReport {
+  branding: {
+    changes: string[];
+    urls: Record<string, string[]>; // url -> changes mapping
+  };
+  integration: {
+    changes: string[];
+    urls: Record<string, string[]>;
+  };
+  pricing: {
+    changes: string[];
+    urls: Record<string, string[]>;
+  };
+  product: {
+    changes: string[];
+    urls: Record<string, string[]>;
+  };
+  positioning: {
+    changes: string[];
+    urls: Record<string, string[]>;
+  };
+  partnership: {
+    changes: string[];
+    urls: Record<string, string[]>;
+  };
+  metadata: {
+    generatedAt: string;
+    timeRange: {
+      from: string;
+      to: string;
+    };
+    urlCount: number;
+    processedUrls: {
+      successful: string[]; // URLs successfully processed
+      failed: string[]; // URLs that encountered errors
+      skipped: string[]; // URLs with no diffs in time range
+    };
+    processingStats: {
+      totalUrls: number;
+      successCount: number;
+      failureCount: number;
+      skippedCount: number;
+    };
+    errors: Record<string, string>; // URL -> error message mapping
+  };
+}
