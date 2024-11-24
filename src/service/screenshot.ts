@@ -4,6 +4,7 @@ import { ScreenshotOptions, ScreenshotMetadata } from "../types";
 import { createScreenshotUrl } from "../utils/url";
 import { cleanHtmlContent } from "../utils/content";
 import { StorageService } from "./storage";
+import { generatePathHash } from "../utils/path";
 
 export class ScreenshotService {
   constructor(
@@ -87,11 +88,23 @@ export class ScreenshotService {
     };
   }
 
-  async getScreenshotImage(path: string) {
+  async getScreenshotImage(hash: string, date: string) {
+    const path = `screenshot/${hash}/${date}`;
     return await this.storage.getScreenshot(path);
   }
 
-  async getScreenshotContent(path: string) {
+  async getScreenshotContent(hash: string, date: string) {
+    const path = `content/${hash}/${date}`;
     return await this.storage.getContent(path);
+  }
+
+  async getScreenshotContentFromUrl(url: string, date: string) {
+    const hash = generatePathHash(url);
+    return await this.getScreenshotContent(hash, date);
+  }
+
+  async getScreenshotImageFromUrl(url: string, date: string) {
+    const hash = generatePathHash(url);
+    return await this.getScreenshotImage(hash, date);
   }
 }

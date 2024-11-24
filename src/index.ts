@@ -115,10 +115,8 @@ app.get(
       const { hash, date } = c.req.valid("param");
       const { format } = c.req.valid("query");
 
-      const path = `screenshot/${hash}/${date}`;
-
       const { screenshot } = initializeServices(c);
-      const object = await screenshot.getScreenshotImage(path);
+      const object = await screenshot.getScreenshotImage(hash, date);
 
       if (!object) {
         return c.json(
@@ -183,10 +181,8 @@ app.get(
     try {
       const { hash, date } = c.req.valid("param");
 
-      const path = `content/${hash}/${date}`;
-
       const { screenshot } = initializeServices(c);
-      const object = await screenshot.getScreenshotContent(path);
+      const object = await screenshot.getScreenshotContent(hash, date);
 
       if (!object) {
         return c.json(
@@ -229,20 +225,16 @@ app.post(
   async (c) => {
     try {
       const { url, timestamp1, timestamp2 } = await c.req.json();
-      console.log("Diff request:", { url, timestamp1, timestamp2 });
 
       const { screenshot, diffDB, ai } = initializeServices(c);
-      console.log("Services initialized");
 
       // Ensure table exists
       await diffDB.ensureDiffTable();
 
-      const urlHash = generatePathHash(url);
-
       // Fetch both content versions
       const [content1Obj, content2Obj] = await Promise.all([
-        screenshot.getScreenshotContent(`content/${urlHash}/${timestamp1}`),
-        screenshot.getScreenshotContent(`content/${urlHash}/${timestamp2}`),
+        screenshot.getScreenshotContentFromUrl(url, timestamp1),
+        screenshot.getScreenshotContentFromUrl(url, timestamp2),
       ]);
 
       if (!content1Obj || !content2Obj) {
@@ -260,14 +252,12 @@ app.post(
         content1Obj.text(),
         content2Obj.text(),
       ]);
-      console.log("Content fetched for diff analysis");
 
       // Analyze with OpenAI
       const differences = await ai.analyzeDifferences(
         content1Text,
         content2Text
       );
-      console.log("Diff analysis completed");
 
       // Store in database
       await diffDB.insertDiff({
@@ -276,7 +266,6 @@ app.post(
         timestamp2,
         differences,
       });
-      console.log("Diff stored in database");
 
       return c.json({
         status: "success",
