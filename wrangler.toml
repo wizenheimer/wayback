@@ -23,10 +23,10 @@ enabled = true
 # Note: Use secrets to store sensitive data.
 # - https://developers.cloudflare.com/workers/configuration/secrets/
 [vars]
-SCREENSHOT_SERVICE_API_KEY = "AWcBYRq2z3E_3w"
+# SCREENSHOT_SERVICE_API_KEY = "AWcBYRq2z3E_3w"
 SCREENSHOT_SERVICE_ORIGIN = "https://api.screenshotone.com"
-ARCHIVE_API_TOKEN = "AWcBYRq2z3E_3w"
-OPENAI_API_KEY = "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"
+# ARCHIVE_API_TOKEN = "AWcBYRq2z3E_3w"
+# OPENAI_API_KEY = "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"
 
 # Bind the Workers AI model catalog. Run machine learning models, powered by serverless GPUs, on Cloudflare’s global network
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#workers-ai
