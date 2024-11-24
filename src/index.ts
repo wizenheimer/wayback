@@ -3,9 +3,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import {
-  AggregatedReport,
   Bindings,
-  DiffAnalysis,
   ScreenshotOptions,
 } from "./types";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "./config";
@@ -24,7 +22,6 @@ import {
 import { initializeServices } from "./utils/initializer";
 import { bearerAuth } from "hono/bearer-auth";
 import { encodeBase64 } from "./utils/encoding";
-import { generatePathHash } from "./utils/path";
 import {
   baseStub,
   createCompetitorEndpoint,
@@ -82,9 +79,9 @@ app.post(
     try {
       const userOptions = await c.req.json<ScreenshotOptions>();
       const options = { ...DEFAULT_SCREENSHOT_OPTIONS, ...userOptions };
-      const { screenshot } = initializeServices(c);
+      const { screenshotService } = initializeServices(c);
 
-      const result = await screenshot.takeScreenshot(options);
+      const result = await screenshotService.takeScreenshot(options);
 
       return c.json({
         status: "success",
@@ -115,10 +112,8 @@ app.get(
       const { hash, date } = c.req.valid("param");
       const { format } = c.req.valid("query");
 
-      const path = `screenshot/${hash}/${date}`;
-
-      const { storage } = initializeServices(c);
-      const object = await storage.getScreenshot(path);
+      const { screenshotService } = initializeServices(c);
+      const object = await screenshotService.getScreenshotImage(hash, date);
 
       if (!object) {
         return c.json(
@@ -183,10 +178,8 @@ app.get(
     try {
       const { hash, date } = c.req.valid("param");
 
-      const path = `content/${hash}/${date}`;
-
-      const { storage } = initializeServices(c);
-      const object = await storage.getContent(path);
+      const { screenshotService } = initializeServices(c);
+      const object = await screenshotService.getScreenshotContent(hash, date);
 
       if (!object) {
         return c.json(
@@ -229,66 +222,18 @@ app.post(
   async (c) => {
     try {
       const { url, timestamp1, timestamp2 } = await c.req.json();
-      console.log("Diff request:", { url, timestamp1, timestamp2 });
 
-      const { storage, diffDB, ai } = initializeServices(c);
-      console.log("Services initialized");
+      const { diffService } = initializeServices(c);
 
-      // Ensure table exists
-      await diffDB.ensureDiffTable();
-
-      const urlHash = generatePathHash(url);
-
-      // Fetch both content versions
-      const [content1Obj, content2Obj] = await Promise.all([
-        storage.getContent(`content/${urlHash}/${timestamp1}`),
-        storage.getContent(`content/${urlHash}/${timestamp2}`),
-      ]);
-
-      if (!content1Obj || !content2Obj) {
-        return c.json(
-          {
-            status: "error",
-            error: "One or both content versions not found",
-          },
-          404
-        );
-      }
-
-      // Get text content
-      const [content1Text, content2Text] = await Promise.all([
-        content1Obj.text(),
-        content2Obj.text(),
-      ]);
-      console.log("Content fetched for diff analysis");
-
-      // Analyze with OpenAI
-      const differences = await ai.analyzeDifferences(
-        content1Text,
-        content2Text
-      );
-      console.log("Diff analysis completed");
-
-      // Store in database
-      await diffDB.insertDiff({
+      const result = await diffService.createDiff({
         url,
         timestamp1,
         timestamp2,
-        differences,
       });
-      console.log("Diff stored in database");
 
       return c.json({
         status: "success",
-        data: {
-          differences,
-          metadata: {
-            url,
-            timestamp1,
-            timestamp2,
-            analyzed_at: new Date().toISOString(),
-          },
-        },
+        data: result,
       });
     } catch (error) {
       console.error("Diff analysis error:", error);
@@ -314,24 +259,9 @@ app.get(
   async (c) => {
     try {
       const { url, from, to, limit } = c.req.valid("query");
-      const { diffDB } = initializeServices(c);
+      const { diffService } = initializeServices(c);
 
-      // Validate date range if both are provided
-      if (from && to && from > to) {
-        return c.json(
-          {
-            status: "error",
-            error: "From date must be earlier than or equal to to date",
-          },
-          400
-        );
-      }
-
-      // Ensure table exists
-      await diffDB.ensureDiffTable();
-
-      // Get history with date range
-      const results = await diffDB.getDiffHistory({
+      const result = await diffService.getDiffHistory({
         url,
         from,
         to,
@@ -340,18 +270,7 @@ app.get(
 
       return c.json({
         status: "success",
-        data: {
-          results,
-          metadata: {
-            url,
-            dateRange: {
-              from: from || "beginning",
-              to: to || "present",
-            },
-            count: results.length,
-            limit,
-          },
-        },
+        data: result,
       });
     } catch (error) {
       console.error("Error fetching diff history:", error);
@@ -377,131 +296,13 @@ app.post(
   async (c) => {
     try {
       const { urls, timestamp1, timestamp2 } = await c.req.json();
-      const { diffDB } = initializeServices(c);
+      const { diffService } = initializeServices(c);
 
-      // Initialize the aggregated report structure
-      const aggregatedReport: AggregatedReport = {
-        branding: { changes: [], urls: {} },
-        integration: { changes: [], urls: {} },
-        pricing: { changes: [], urls: {} },
-        product: { changes: [], urls: {} },
-        positioning: { changes: [], urls: {} },
-        partnership: { changes: [], urls: {} },
-        metadata: {
-          generatedAt: new Date().toISOString(),
-          timeRange: {
-            from: "",
-            to: "",
-          },
-          urlCount: urls.length,
-          processedUrls: {
-            successful: [],
-            failed: [],
-            skipped: [], // For URLs with no diffs in time range
-          },
-          processingStats: {
-            totalUrls: urls.length,
-            successCount: 0,
-            failureCount: 0,
-            skippedCount: 0,
-          },
-          errors: {} as Record<string, string>, // URL -> error message mapping
-        },
-      };
-
-      // Process each URL
-      const diffPromises = urls.map(async (url: string) => {
-        try {
-          const diffs = await diffDB.getDiffHistory({
-            url,
-            from: timestamp1,
-            to: timestamp2,
-            limit: 1,
-          });
-
-          if (diffs.length === 0) {
-            // No diffs found in time range
-            aggregatedReport.metadata.processedUrls.skipped.push(url);
-            aggregatedReport.metadata.processingStats.skippedCount++;
-            aggregatedReport.metadata.errors[url] =
-              "No diffs found in specified time range";
-            return;
-          }
-
-          const diff = diffs[0];
-
-          // Update time range in metadata
-          if (
-            !aggregatedReport.metadata.timeRange.from ||
-            diff.timestamp1 < aggregatedReport.metadata.timeRange.from
-          ) {
-            aggregatedReport.metadata.timeRange.from = diff.timestamp1;
-          }
-          if (
-            !aggregatedReport.metadata.timeRange.to ||
-            diff.timestamp2 > aggregatedReport.metadata.timeRange.to
-          ) {
-            aggregatedReport.metadata.timeRange.to = diff.timestamp2;
-          }
-
-          // Process each category
-          const categories: (keyof DiffAnalysis)[] = [
-            "branding",
-            "integration",
-            "pricing",
-            "product",
-            "positioning",
-            "partnership",
-          ];
-
-          categories.forEach((category) => {
-            const changes = diff[`${category}_changes`];
-            if (changes && changes.length > 0) {
-              // Add new unique changes to the global list
-              changes.forEach((change: string) => {
-                if (!aggregatedReport[category].changes.includes(change)) {
-                  aggregatedReport[category].changes.push(change);
-                }
-
-                // Add changes to URL mapping
-                if (!aggregatedReport[category].urls[url]) {
-                  aggregatedReport[category].urls[url] = [];
-                }
-                if (!aggregatedReport[category].urls[url].includes(change)) {
-                  aggregatedReport[category].urls[url].push(change);
-                }
-              });
-            }
-          });
-
-          // Mark URL as successfully processed
-          aggregatedReport.metadata.processedUrls.successful.push(url);
-          aggregatedReport.metadata.processingStats.successCount++;
-        } catch (error) {
-          // Handle individual URL processing errors
-          aggregatedReport.metadata.processedUrls.failed.push(url);
-          aggregatedReport.metadata.processingStats.failureCount++;
-          aggregatedReport.metadata.errors[url] =
-            error instanceof Error ? error.message : "Unknown error occurred";
-        }
+      const aggregatedReport = await diffService.generateReport({
+        urls,
+        timestamp1,
+        timestamp2,
       });
-
-      // Wait for all diffs to be processed
-      await Promise.all(diffPromises);
-
-      // Sort changes in each category for consistency
-      Object.keys(aggregatedReport).forEach((category) => {
-        if (category !== "metadata") {
-          aggregatedReport[
-            category as keyof Omit<AggregatedReport, "metadata">
-          ].changes.sort();
-        }
-      });
-
-      // Sort the processed URLs arrays for consistency
-      aggregatedReport.metadata.processedUrls.successful.sort();
-      aggregatedReport.metadata.processedUrls.failed.sort();
-      aggregatedReport.metadata.processedUrls.skipped.sort();
 
       return c.json({
         status: "success",
@@ -536,9 +337,9 @@ app.post(
   async (c) => {
     try {
       const input = await c.req.json();
-      const { competitor } = initializeServices(c);
+      const { competitorService } = initializeServices(c);
 
-      const result = await competitor.createCompetitor(input);
+      const result = await competitorService.createCompetitor(input);
 
       return c.json({
         status: "success",
@@ -563,11 +364,11 @@ app.post(
 // List all competitors with pagination
 app.get(listCompetitorsEndpoint, async (c) => {
   try {
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
     const limit = parseInt(c.req.query("limit") || "10");
     const offset = parseInt(c.req.query("offset") || "0");
 
-    const result = await competitor.listCompetitors({ limit, offset });
+    const result = await competitorService.listCompetitors({ limit, offset });
 
     return c.json({
       status: "success",
@@ -594,12 +395,12 @@ app.get(listCompetitorsEndpoint, async (c) => {
 // List competitor URLs with pagination and optional domain hash filter
 app.get(listCompetitorsURLs, async (c) => {
   try {
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
     const limit = parseInt(c.req.query("limit") || "10");
     const offset = parseInt(c.req.query("offset") || "0");
     const domainHash = c.req.query("domain_hash");
 
-    const result = await competitor.listCompetitorUrls({
+    const result = await competitorService.listCompetitorUrls({
       limit,
       offset,
       domainHash,
@@ -633,9 +434,9 @@ app.get(listCompetitorsURLs, async (c) => {
 app.get(listCompetitorsbyHash, async (c) => {
   try {
     const domainHash = c.req.param("hash");
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
 
-    const result = await competitor.findCompetitorsByUrlHash(domainHash);
+    const result = await competitorService.findCompetitorsByUrlHash(domainHash);
 
     return c.json({
       status: "success",
@@ -667,9 +468,9 @@ app.get(listCompetitorsbyHash, async (c) => {
 app.get(getCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
 
-    const result = await competitor.getCompetitor(id);
+    const result = await competitorService.getCompetitor(id);
 
     if (!result) {
       return c.json(
@@ -706,10 +507,10 @@ app.post(
     try {
       const competitorId = parseInt(c.req.param("id"));
       const { url } = await c.req.json<AddUrlInput>();
-      const { competitor } = initializeServices(c);
+      const { competitorService } = initializeServices(c);
 
       // Add URL
-      const newUrl = await competitor.addUrl(competitorId, url);
+      const newUrl = await competitorService.addUrl(competitorId, url);
 
       return c.json({
         status: "success",
@@ -768,10 +569,10 @@ app.delete(updateCompetitorURLEndpoint, async (c) => {
       );
     }
 
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
 
     // Remove URL
-    await competitor.removeUrl(competitorId, url);
+    await competitorService.removeUrl(competitorId, url);
 
     return c.json({
       status: "success",
@@ -821,9 +622,9 @@ app.put(
     try {
       const id = parseInt(c.req.param("id"));
       const input = await c.req.json();
-      const { competitor } = initializeServices(c);
+      const { competitorService } = initializeServices(c);
 
-      const result = await competitor.updateCompetitor(id, input);
+      const result = await competitorService.updateCompetitor(id, input);
 
       return c.json({
         status: "success",
@@ -849,9 +650,9 @@ app.put(
 app.delete(deleteCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
-    const { competitor } = initializeServices(c);
+    const { competitorService } = initializeServices(c);
 
-    await competitor.deleteCompetitor(id);
+    await competitorService.deleteCompetitor(id);
 
     return c.json({
       status: "success",
