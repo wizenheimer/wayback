@@ -24,19 +24,43 @@ import { generatePathHash } from "./utils/path";
 import {
   diffCreationEndpoint,
   diffHistoryEndpoint,
+  reportCreationEndpoint,
   screenshotContentQueryEndpoint,
   screenshotCreationEndpoint,
   screenshotImageQueryEndpoint,
 } from "./constants";
+import { swaggerUI } from "@hono/swagger-ui";
+import { openApiSpec } from "./openapi";
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.use("/*", async (c, next) => {
+// =======================================================
+//                 Swagger Documentation
+// =======================================================
+
+// Serve Swagger UI
+app.get("/", swaggerUI({ url: "/docs" }));
+
+// Serve OpenAPI specification
+app.get("/docs", (c) => {
+  return c.json(openApiSpec);
+});
+
+// =======================================================
+//                 Authentication Middleware
+// =======================================================
+
+app.use("/api/*", async (c, next) => {
   const bearer = bearerAuth({ token: c.env.ARCHIVE_API_TOKEN });
   return bearer(c, next);
 });
 
-// Take screenshot endpoint
+// =======================================================
+//               Screenshot Capture Endpoints
+// =======================================================
+
+// Trigger a screenshot capture for a given URL
+// Store the image and text content in the storage service
 app.post(
   screenshotCreationEndpoint,
   zValidator("json", screenshotSchema),
@@ -66,7 +90,8 @@ app.post(
   }
 );
 
-// Get screenshot endpoint
+// Return the image content of a screenshot
+// This requires the content to be stored in the storage service
 app.get(
   screenshotImageQueryEndpoint,
   zValidator("query", getScreenshotQuerySchema),
@@ -135,7 +160,8 @@ app.get(
   }
 );
 
-// Get content endpoint
+// Return the text content of a screenshot
+// This requires the content to be stored in the storage service
 app.get(
   screenshotContentQueryEndpoint,
   zValidator("param", getScreenshotParamSchema),
@@ -177,7 +203,12 @@ app.get(
   }
 );
 
-// Generate diff endpoint
+// =======================================================
+//              Diff Analysis Endpoints
+// =======================================================
+
+// Generate a diff for a given url between any two content versions
+// This requires the content to be stored in the storage service
 app.post(
   diffCreationEndpoint,
   zValidator("json", diffRequestSchema),
@@ -261,6 +292,8 @@ app.post(
   }
 );
 
+// Query diff for a given URL between any two content versions
+// This requires the content to be stored in the storage service
 app.get(
   diffHistoryEndpoint,
   zValidator("query", historyQuerySchema),
@@ -322,150 +355,162 @@ app.get(
   }
 );
 
-app.post("/report", zValidator("json", reportRequestSchema), async (c) => {
-  try {
-    const { urls, timestamp1, timestamp2 } = await c.req.json();
-    const { db } = initializeServices(c);
+// Query and aggregate diffs for a list of URLs within a time range
+// This requires the content to be stored in the storage service
+app.post(
+  reportCreationEndpoint,
+  zValidator("json", reportRequestSchema),
+  async (c) => {
+    try {
+      const { urls, timestamp1, timestamp2 } = await c.req.json();
+      const { db } = initializeServices(c);
 
-    // Initialize the aggregated report structure
-    const aggregatedReport: AggregatedReport = {
-      branding: { changes: [], urls: {} },
-      integration: { changes: [], urls: {} },
-      pricing: { changes: [], urls: {} },
-      product: { changes: [], urls: {} },
-      positioning: { changes: [], urls: {} },
-      partnership: { changes: [], urls: {} },
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        timeRange: {
-          from: "",
-          to: "",
+      // Initialize the aggregated report structure
+      const aggregatedReport: AggregatedReport = {
+        branding: { changes: [], urls: {} },
+        integration: { changes: [], urls: {} },
+        pricing: { changes: [], urls: {} },
+        product: { changes: [], urls: {} },
+        positioning: { changes: [], urls: {} },
+        partnership: { changes: [], urls: {} },
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          timeRange: {
+            from: "",
+            to: "",
+          },
+          urlCount: urls.length,
+          processedUrls: {
+            successful: [],
+            failed: [],
+            skipped: [], // For URLs with no diffs in time range
+          },
+          processingStats: {
+            totalUrls: urls.length,
+            successCount: 0,
+            failureCount: 0,
+            skippedCount: 0,
+          },
+          errors: {} as Record<string, string>, // URL -> error message mapping
         },
-        urlCount: urls.length,
-        processedUrls: {
-          successful: [],
-          failed: [],
-          skipped: [], // For URLs with no diffs in time range
-        },
-        processingStats: {
-          totalUrls: urls.length,
-          successCount: 0,
-          failureCount: 0,
-          skippedCount: 0,
-        },
-        errors: {} as Record<string, string>, // URL -> error message mapping
-      },
-    };
+      };
 
-    // Process each URL
-    const diffPromises = urls.map(async (url: string) => {
-      try {
-        const diffs = await db.getDiffHistory({
-          url,
-          from: timestamp1,
-          to: timestamp2,
-          limit: 1,
-        });
+      // Process each URL
+      const diffPromises = urls.map(async (url: string) => {
+        try {
+          const diffs = await db.getDiffHistory({
+            url,
+            from: timestamp1,
+            to: timestamp2,
+            limit: 1,
+          });
 
-        if (diffs.length === 0) {
-          // No diffs found in time range
-          aggregatedReport.metadata.processedUrls.skipped.push(url);
-          aggregatedReport.metadata.processingStats.skippedCount++;
-          aggregatedReport.metadata.errors[url] =
-            "No diffs found in specified time range";
-          return;
-        }
-
-        const diff = diffs[0];
-
-        // Update time range in metadata
-        if (
-          !aggregatedReport.metadata.timeRange.from ||
-          diff.timestamp1 < aggregatedReport.metadata.timeRange.from
-        ) {
-          aggregatedReport.metadata.timeRange.from = diff.timestamp1;
-        }
-        if (
-          !aggregatedReport.metadata.timeRange.to ||
-          diff.timestamp2 > aggregatedReport.metadata.timeRange.to
-        ) {
-          aggregatedReport.metadata.timeRange.to = diff.timestamp2;
-        }
-
-        // Process each category
-        const categories: (keyof DiffAnalysis)[] = [
-          "branding",
-          "integration",
-          "pricing",
-          "product",
-          "positioning",
-          "partnership",
-        ];
-
-        categories.forEach((category) => {
-          const changes = diff[`${category}_changes`];
-          if (changes && changes.length > 0) {
-            // Add new unique changes to the global list
-            changes.forEach((change: string) => {
-              if (!aggregatedReport[category].changes.includes(change)) {
-                aggregatedReport[category].changes.push(change);
-              }
-
-              // Add changes to URL mapping
-              if (!aggregatedReport[category].urls[url]) {
-                aggregatedReport[category].urls[url] = [];
-              }
-              if (!aggregatedReport[category].urls[url].includes(change)) {
-                aggregatedReport[category].urls[url].push(change);
-              }
-            });
+          if (diffs.length === 0) {
+            // No diffs found in time range
+            aggregatedReport.metadata.processedUrls.skipped.push(url);
+            aggregatedReport.metadata.processingStats.skippedCount++;
+            aggregatedReport.metadata.errors[url] =
+              "No diffs found in specified time range";
+            return;
           }
-        });
 
-        // Mark URL as successfully processed
-        aggregatedReport.metadata.processedUrls.successful.push(url);
-        aggregatedReport.metadata.processingStats.successCount++;
-      } catch (error) {
-        // Handle individual URL processing errors
-        aggregatedReport.metadata.processedUrls.failed.push(url);
-        aggregatedReport.metadata.processingStats.failureCount++;
-        aggregatedReport.metadata.errors[url] =
-          error instanceof Error ? error.message : "Unknown error occurred";
-      }
-    });
+          const diff = diffs[0];
 
-    // Wait for all diffs to be processed
-    await Promise.all(diffPromises);
+          // Update time range in metadata
+          if (
+            !aggregatedReport.metadata.timeRange.from ||
+            diff.timestamp1 < aggregatedReport.metadata.timeRange.from
+          ) {
+            aggregatedReport.metadata.timeRange.from = diff.timestamp1;
+          }
+          if (
+            !aggregatedReport.metadata.timeRange.to ||
+            diff.timestamp2 > aggregatedReport.metadata.timeRange.to
+          ) {
+            aggregatedReport.metadata.timeRange.to = diff.timestamp2;
+          }
 
-    // Sort changes in each category for consistency
-    Object.keys(aggregatedReport).forEach((category) => {
-      if (category !== "metadata") {
-        aggregatedReport[
-          category as keyof Omit<AggregatedReport, "metadata">
-        ].changes.sort();
-      }
-    });
+          // Process each category
+          const categories: (keyof DiffAnalysis)[] = [
+            "branding",
+            "integration",
+            "pricing",
+            "product",
+            "positioning",
+            "partnership",
+          ];
 
-    // Sort the processed URLs arrays for consistency
-    aggregatedReport.metadata.processedUrls.successful.sort();
-    aggregatedReport.metadata.processedUrls.failed.sort();
-    aggregatedReport.metadata.processedUrls.skipped.sort();
+          categories.forEach((category) => {
+            const changes = diff[`${category}_changes`];
+            if (changes && changes.length > 0) {
+              // Add new unique changes to the global list
+              changes.forEach((change: string) => {
+                if (!aggregatedReport[category].changes.includes(change)) {
+                  aggregatedReport[category].changes.push(change);
+                }
 
-    return c.json({
-      status: "success",
-      data: aggregatedReport,
-    });
-  } catch (error) {
-    console.error("Report generation error:", error);
-    return c.json(
-      {
-        status: "error",
-        error:
-          error instanceof Error ? error.message : "Failed to generate report",
-      },
-      500
-    );
+                // Add changes to URL mapping
+                if (!aggregatedReport[category].urls[url]) {
+                  aggregatedReport[category].urls[url] = [];
+                }
+                if (!aggregatedReport[category].urls[url].includes(change)) {
+                  aggregatedReport[category].urls[url].push(change);
+                }
+              });
+            }
+          });
+
+          // Mark URL as successfully processed
+          aggregatedReport.metadata.processedUrls.successful.push(url);
+          aggregatedReport.metadata.processingStats.successCount++;
+        } catch (error) {
+          // Handle individual URL processing errors
+          aggregatedReport.metadata.processedUrls.failed.push(url);
+          aggregatedReport.metadata.processingStats.failureCount++;
+          aggregatedReport.metadata.errors[url] =
+            error instanceof Error ? error.message : "Unknown error occurred";
+        }
+      });
+
+      // Wait for all diffs to be processed
+      await Promise.all(diffPromises);
+
+      // Sort changes in each category for consistency
+      Object.keys(aggregatedReport).forEach((category) => {
+        if (category !== "metadata") {
+          aggregatedReport[
+            category as keyof Omit<AggregatedReport, "metadata">
+          ].changes.sort();
+        }
+      });
+
+      // Sort the processed URLs arrays for consistency
+      aggregatedReport.metadata.processedUrls.successful.sort();
+      aggregatedReport.metadata.processedUrls.failed.sort();
+      aggregatedReport.metadata.processedUrls.skipped.sort();
+
+      return c.json({
+        status: "success",
+        data: aggregatedReport,
+      });
+    } catch (error) {
+      console.error("Report generation error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate report",
+        },
+        500
+      );
+    }
   }
-});
+);
+
+// =======================================================
+//                  Competitor CRUD Endpoints
+// =======================================================
 
 export default app;
