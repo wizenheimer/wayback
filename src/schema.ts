@@ -139,6 +139,24 @@ const historyQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional(),
 });
 
+const reportRequestSchema = z
+  .object({
+    urls: z.array(z.string().url()).min(1).max(100),
+    timestamp1: z.string().length(8).regex(/^\d+$/).optional(),
+    timestamp2: z.string().length(8).regex(/^\d+$/).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.timestamp1 && data.timestamp2) {
+        return data.timestamp1 <= data.timestamp2;
+      }
+      return true;
+    },
+    {
+      message: "timestamp1 must be earlier than or equal to timestamp2",
+    }
+  );
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
@@ -146,4 +164,5 @@ export {
   screenshotSchema,
   diffRequestSchema,
   historyQuerySchema,
+  reportRequestSchema,
 };

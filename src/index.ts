@@ -2,13 +2,19 @@
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { Bindings, ScreenshotOptions } from "./types";
+import {
+  AggregatedReport,
+  Bindings,
+  DiffAnalysis,
+  ScreenshotOptions,
+} from "./types";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "./config";
 import {
   diffRequestSchema,
   getScreenshotParamSchema,
   getScreenshotQuerySchema,
   historyQuerySchema,
+  reportRequestSchema,
   screenshotSchema,
 } from "./schema";
 import { initializeServices } from "./utils/initializer";
@@ -315,5 +321,151 @@ app.get(
     }
   }
 );
+
+app.post("/report", zValidator("json", reportRequestSchema), async (c) => {
+  try {
+    const { urls, timestamp1, timestamp2 } = await c.req.json();
+    const { db } = initializeServices(c);
+
+    // Initialize the aggregated report structure
+    const aggregatedReport: AggregatedReport = {
+      branding: { changes: [], urls: {} },
+      integration: { changes: [], urls: {} },
+      pricing: { changes: [], urls: {} },
+      product: { changes: [], urls: {} },
+      positioning: { changes: [], urls: {} },
+      partnership: { changes: [], urls: {} },
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        timeRange: {
+          from: "",
+          to: "",
+        },
+        urlCount: urls.length,
+        processedUrls: {
+          successful: [],
+          failed: [],
+          skipped: [], // For URLs with no diffs in time range
+        },
+        processingStats: {
+          totalUrls: urls.length,
+          successCount: 0,
+          failureCount: 0,
+          skippedCount: 0,
+        },
+        errors: {} as Record<string, string>, // URL -> error message mapping
+      },
+    };
+
+    // Process each URL
+    const diffPromises = urls.map(async (url: string) => {
+      try {
+        const diffs = await db.getDiffHistory({
+          url,
+          from: timestamp1,
+          to: timestamp2,
+          limit: 1,
+        });
+
+        if (diffs.length === 0) {
+          // No diffs found in time range
+          aggregatedReport.metadata.processedUrls.skipped.push(url);
+          aggregatedReport.metadata.processingStats.skippedCount++;
+          aggregatedReport.metadata.errors[url] =
+            "No diffs found in specified time range";
+          return;
+        }
+
+        const diff = diffs[0];
+
+        // Update time range in metadata
+        if (
+          !aggregatedReport.metadata.timeRange.from ||
+          diff.timestamp1 < aggregatedReport.metadata.timeRange.from
+        ) {
+          aggregatedReport.metadata.timeRange.from = diff.timestamp1;
+        }
+        if (
+          !aggregatedReport.metadata.timeRange.to ||
+          diff.timestamp2 > aggregatedReport.metadata.timeRange.to
+        ) {
+          aggregatedReport.metadata.timeRange.to = diff.timestamp2;
+        }
+
+        // Process each category
+        const categories: (keyof DiffAnalysis)[] = [
+          "branding",
+          "integration",
+          "pricing",
+          "product",
+          "positioning",
+          "partnership",
+        ];
+
+        categories.forEach((category) => {
+          const changes = diff[`${category}_changes`];
+          if (changes && changes.length > 0) {
+            // Add new unique changes to the global list
+            changes.forEach((change: string) => {
+              if (!aggregatedReport[category].changes.includes(change)) {
+                aggregatedReport[category].changes.push(change);
+              }
+
+              // Add changes to URL mapping
+              if (!aggregatedReport[category].urls[url]) {
+                aggregatedReport[category].urls[url] = [];
+              }
+              if (!aggregatedReport[category].urls[url].includes(change)) {
+                aggregatedReport[category].urls[url].push(change);
+              }
+            });
+          }
+        });
+
+        // Mark URL as successfully processed
+        aggregatedReport.metadata.processedUrls.successful.push(url);
+        aggregatedReport.metadata.processingStats.successCount++;
+      } catch (error) {
+        // Handle individual URL processing errors
+        aggregatedReport.metadata.processedUrls.failed.push(url);
+        aggregatedReport.metadata.processingStats.failureCount++;
+        aggregatedReport.metadata.errors[url] =
+          error instanceof Error ? error.message : "Unknown error occurred";
+      }
+    });
+
+    // Wait for all diffs to be processed
+    await Promise.all(diffPromises);
+
+    // Sort changes in each category for consistency
+    Object.keys(aggregatedReport).forEach((category) => {
+      if (category !== "metadata") {
+        aggregatedReport[
+          category as keyof Omit<AggregatedReport, "metadata">
+        ].changes.sort();
+      }
+    });
+
+    // Sort the processed URLs arrays for consistency
+    aggregatedReport.metadata.processedUrls.successful.sort();
+    aggregatedReport.metadata.processedUrls.failed.sort();
+    aggregatedReport.metadata.processedUrls.skipped.sort();
+
+    return c.json({
+      status: "success",
+      data: aggregatedReport,
+    });
+  } catch (error) {
+    console.error("Report generation error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to generate report",
+      },
+      500
+    );
+  }
+});
 
 export default app;
