@@ -15,7 +15,7 @@ const initializeServices = (c: any) => {
   const diffDB = new DBService(c.env.DIFF_DB);
   const ai = new AIService(c.env.OPENAI_API_KEY);
   const competitor = new CompetitorService(c.env.COMPETITOR_DB);
-  return { storage, screenshot, diffDB, ai, competitor };
+  return { screenshot, diffDB, ai, competitor };
 };
 
 export { initializeServices };

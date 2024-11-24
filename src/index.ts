@@ -117,8 +117,8 @@ app.get(
 
       const path = `screenshot/${hash}/${date}`;
 
-      const { storage } = initializeServices(c);
-      const object = await storage.getScreenshot(path);
+      const { screenshot } = initializeServices(c);
+      const object = await screenshot.getScreenshotImage(path);
 
       if (!object) {
         return c.json(
@@ -185,8 +185,8 @@ app.get(
 
       const path = `content/${hash}/${date}`;
 
-      const { storage } = initializeServices(c);
-      const object = await storage.getContent(path);
+      const { screenshot } = initializeServices(c);
+      const object = await screenshot.getScreenshotContent(path);
 
       if (!object) {
         return c.json(
@@ -231,7 +231,7 @@ app.post(
       const { url, timestamp1, timestamp2 } = await c.req.json();
       console.log("Diff request:", { url, timestamp1, timestamp2 });
 
-      const { storage, diffDB, ai } = initializeServices(c);
+      const { screenshot, diffDB, ai } = initializeServices(c);
       console.log("Services initialized");
 
       // Ensure table exists
@@ -241,8 +241,8 @@ app.post(
 
       // Fetch both content versions
       const [content1Obj, content2Obj] = await Promise.all([
-        storage.getContent(`content/${urlHash}/${timestamp1}`),
-        storage.getContent(`content/${urlHash}/${timestamp2}`),
+        screenshot.getScreenshotContent(`content/${urlHash}/${timestamp1}`),
+        screenshot.getScreenshotContent(`content/${urlHash}/${timestamp2}`),
       ]);
 
       if (!content1Obj || !content2Obj) {

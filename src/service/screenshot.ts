@@ -86,4 +86,12 @@ export class ScreenshotService {
       contentType,
     };
   }
+
+  async getScreenshotImage(path: string) {
+    return await this.storage.getScreenshot(path);
+  }
+
+  async getScreenshotContent(path: string) {
+    return await this.storage.getContent(path);
+  }
 }
