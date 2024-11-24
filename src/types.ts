@@ -261,12 +261,18 @@ export type ScreenshotMetadata = {
 };
 
 export type Bindings = {
+  // Key bindings
   SCREENSHOT_SERVICE_API_KEY: string;
   SCREENSHOT_SERVICE_ORIGIN: string;
   ARCHIVE_API_TOKEN: string;
-  archive: R2Bucket;
-  DB: D1Database;
   OPENAI_API_KEY: string;
+
+  // R2Bucket bindings
+  archive: R2Bucket;
+
+  // Database bindings
+  DIFF_DB: D1Database;
+  COMPETITOR_DB: D1Database;
 };
 
 export interface DiffAnalysis {
@@ -340,4 +346,24 @@ export interface AggregatedReport {
     };
     errors: Record<string, string>; // URL -> error message mapping
   };
+}
+
+export interface Competitor {
+  id: number; // auto-generated
+  domain: string; // extracted domain
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CompetitorUrl {
+  id: number;
+  competitor_id: number;
+  url: string;
+  domain_hash: string; // moved here from Competitor
+  created_at: string;
+}
+
+export interface CompetitorWithUrls extends Competitor {
+  urls: string[];
 }

@@ -157,6 +157,32 @@ const reportRequestSchema = z
     }
   );
 
+export const competitorSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  domain: z.string().min(1, "Domain is required"),
+  urls: z
+    .array(z.string().url("Invalid URL"))
+    .min(1, "At least one URL is required"),
+});
+
+export const updateCompetitorSchema = z.object({
+  name: z.string().min(1, "Name is required").optional(),
+  domain: z.string().min(1, "Domain is required").optional(),
+  urls: z
+    .array(z.string().url("Invalid URL"))
+    .min(1, "At least one URL is required")
+    .optional(),
+});
+
+type CreateCompetitorInput = z.infer<typeof competitorSchema>;
+type UpdateCompetitorInput = z.infer<typeof updateCompetitorSchema>;
+
+const addUrlSchema = z.object({
+  url: z.string().url("Invalid URL"),
+});
+
+type AddUrlInput = z.infer<typeof addUrlSchema>;
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
@@ -165,4 +191,8 @@ export {
   diffRequestSchema,
   historyQuerySchema,
   reportRequestSchema,
+  CreateCompetitorInput,
+  UpdateCompetitorInput,
+  AddUrlInput,
+  addUrlSchema,
 };
