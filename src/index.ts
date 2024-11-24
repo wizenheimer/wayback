@@ -10,24 +10,38 @@ import {
 } from "./types";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "./config";
 import {
+  AddUrlInput,
+  addUrlSchema,
+  competitorSchema,
   diffRequestSchema,
   getScreenshotParamSchema,
   getScreenshotQuerySchema,
   historyQuerySchema,
   reportRequestSchema,
   screenshotSchema,
+  updateCompetitorSchema,
 } from "./schema";
 import { initializeServices } from "./utils/initializer";
 import { bearerAuth } from "hono/bearer-auth";
 import { encodeBase64 } from "./utils/encoding";
 import { generatePathHash } from "./utils/path";
 import {
+  baseStub,
+  createCompetitorEndpoint,
+  deleteCompetitorEndpoint,
   diffCreationEndpoint,
   diffHistoryEndpoint,
+  docsStub,
+  getCompetitorEndpoint,
+  listCompetitorsbyHash,
+  listCompetitorsEndpoint,
+  listCompetitorsURLs,
   reportCreationEndpoint,
   screenshotContentQueryEndpoint,
   screenshotCreationEndpoint,
   screenshotImageQueryEndpoint,
+  updateCompetitorEndpoint,
+  updateCompetitorURLEndpoint,
 } from "./constants";
 import { swaggerUI } from "@hono/swagger-ui";
 import { openApiSpec } from "./openapi";
@@ -39,10 +53,10 @@ const app = new Hono<{ Bindings: Bindings }>();
 // =======================================================
 
 // Serve Swagger UI
-app.get("/", swaggerUI({ url: "/docs" }));
+app.get("/", swaggerUI({ url: docsStub }));
 
 // Serve OpenAPI specification
-app.get("/docs", (c) => {
+app.get(docsStub, (c) => {
   return c.json(openApiSpec);
 });
 
@@ -50,7 +64,7 @@ app.get("/docs", (c) => {
 //                 Authentication Middleware
 // =======================================================
 
-app.use("/api/*", async (c, next) => {
+app.use(`${baseStub}/*`, async (c, next) => {
   const bearer = bearerAuth({ token: c.env.ARCHIVE_API_TOKEN });
   return bearer(c, next);
 });
@@ -217,11 +231,11 @@ app.post(
       const { url, timestamp1, timestamp2 } = await c.req.json();
       console.log("Diff request:", { url, timestamp1, timestamp2 });
 
-      const { storage, db, ai } = initializeServices(c);
+      const { storage, diffDB, ai } = initializeServices(c);
       console.log("Services initialized");
 
       // Ensure table exists
-      await db.ensureDiffTable();
+      await diffDB.ensureDiffTable();
 
       const urlHash = generatePathHash(url);
 
@@ -256,7 +270,7 @@ app.post(
       console.log("Diff analysis completed");
 
       // Store in database
-      await db.insertDiff({
+      await diffDB.insertDiff({
         url,
         timestamp1,
         timestamp2,
@@ -300,7 +314,7 @@ app.get(
   async (c) => {
     try {
       const { url, from, to, limit } = c.req.valid("query");
-      const { db } = initializeServices(c);
+      const { diffDB } = initializeServices(c);
 
       // Validate date range if both are provided
       if (from && to && from > to) {
@@ -314,10 +328,10 @@ app.get(
       }
 
       // Ensure table exists
-      await db.ensureDiffTable();
+      await diffDB.ensureDiffTable();
 
       // Get history with date range
-      const results = await db.getDiffHistory({
+      const results = await diffDB.getDiffHistory({
         url,
         from,
         to,
@@ -363,7 +377,7 @@ app.post(
   async (c) => {
     try {
       const { urls, timestamp1, timestamp2 } = await c.req.json();
-      const { db } = initializeServices(c);
+      const { diffDB } = initializeServices(c);
 
       // Initialize the aggregated report structure
       const aggregatedReport: AggregatedReport = {
@@ -398,7 +412,7 @@ app.post(
       // Process each URL
       const diffPromises = urls.map(async (url: string) => {
         try {
-          const diffs = await db.getDiffHistory({
+          const diffs = await diffDB.getDiffHistory({
             url,
             from: timestamp1,
             to: timestamp2,
@@ -509,8 +523,353 @@ app.post(
   }
 );
 
-// =======================================================
-//                  Competitor CRUD Endpoints
-// =======================================================
+// ===============================================================
+//                  Competitor Management - Aggregate
+//
+//                            Creation and Listing
+// ===============================================================
+
+// Create a new competitor
+app.post(
+  createCompetitorEndpoint,
+  zValidator("json", competitorSchema),
+  async (c) => {
+    try {
+      const input = await c.req.json();
+      const { competitor } = initializeServices(c);
+
+      const result = await competitor.createCompetitor(input);
+
+      return c.json({
+        status: "success",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Create competitor error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to create competitor",
+        },
+        500
+      );
+    }
+  }
+);
+
+// List all competitors with pagination
+app.get(listCompetitorsEndpoint, async (c) => {
+  try {
+    const { competitor } = initializeServices(c);
+    const limit = parseInt(c.req.query("limit") || "10");
+    const offset = parseInt(c.req.query("offset") || "0");
+
+    const result = await competitor.listCompetitors({ limit, offset });
+
+    return c.json({
+      status: "success",
+      data: result.competitors,
+      metadata: {
+        total: result.total,
+        limit,
+        offset,
+      },
+    });
+  } catch (error) {
+    console.error("List competitors error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to list competitors",
+      },
+      500
+    );
+  }
+});
+
+// List competitor URLs with pagination and optional domain hash filter
+app.get(listCompetitorsURLs, async (c) => {
+  try {
+    const { competitor } = initializeServices(c);
+    const limit = parseInt(c.req.query("limit") || "10");
+    const offset = parseInt(c.req.query("offset") || "0");
+    const domainHash = c.req.query("domain_hash");
+
+    const result = await competitor.listCompetitorUrls({
+      limit,
+      offset,
+      domainHash,
+    });
+
+    return c.json({
+      status: "success",
+      data: result.urls,
+      metadata: {
+        total: result.total,
+        limit,
+        offset,
+      },
+    });
+  } catch (error) {
+    console.error("List competitor URLs error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to list competitor URLs",
+      },
+      500
+    );
+  }
+});
+
+// Find competitors by URL domain hash
+app.get(listCompetitorsbyHash, async (c) => {
+  try {
+    const domainHash = c.req.param("hash");
+    const { competitor } = initializeServices(c);
+
+    const result = await competitor.findCompetitorsByUrlHash(domainHash);
+
+    return c.json({
+      status: "success",
+      data: result,
+      metadata: {
+        count: result.length,
+      },
+    });
+  } catch (error) {
+    console.error("Find competitors by domain hash error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to find competitors",
+      },
+      500
+    );
+  }
+});
+
+// =======================================================================
+//                  Competitor Management - Individual
+//
+//         Get Any, Update Any, Add URL, Remove URL, Delete Competitor
+// =======================================================================
+
+// Find competitor by ID
+app.get(getCompetitorEndpoint, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const { competitor } = initializeServices(c);
+
+    const result = await competitor.getCompetitor(id);
+
+    if (!result) {
+      return c.json(
+        {
+          status: "error",
+          error: "Competitor not found",
+        },
+        404
+      );
+    }
+
+    return c.json({
+      status: "success",
+      data: result,
+    });
+  } catch (error) {
+    console.error("Get competitor error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to get competitor",
+      },
+      500
+    );
+  }
+});
+
+// Register a new URL for a competitor
+app.post(
+  updateCompetitorURLEndpoint,
+  zValidator("json", addUrlSchema),
+  async (c) => {
+    try {
+      const competitorId = parseInt(c.req.param("id"));
+      const { url } = await c.req.json<AddUrlInput>();
+      const { competitor } = initializeServices(c);
+
+      // Add URL
+      const newUrl = await competitor.addUrl(competitorId, url);
+
+      return c.json({
+        status: "success",
+        data: {
+          newUrl,
+        },
+      });
+    } catch (error) {
+      console.error("Add URL error:", error);
+
+      if (error instanceof Error) {
+        if (error.message === "URL already exists for this competitor") {
+          return c.json(
+            {
+              status: "error",
+              error: error.message,
+            },
+            409
+          ); // Conflict
+        }
+        if (error.message === "Competitor not found") {
+          return c.json(
+            {
+              status: "error",
+              error: error.message,
+            },
+            404
+          );
+        }
+      }
+
+      return c.json(
+        {
+          status: "error",
+          error: error instanceof Error ? error.message : "Failed to add URL",
+        },
+        500
+      );
+    }
+  }
+);
+
+// Remove a URL from a competitor
+app.delete(updateCompetitorURLEndpoint, async (c) => {
+  try {
+    const competitorId = parseInt(c.req.param("id"));
+    const url = c.req.query("url");
+
+    if (!url) {
+      return c.json(
+        {
+          status: "error",
+          error: "URL parameter is required",
+        },
+        400
+      );
+    }
+
+    const { competitor } = initializeServices(c);
+
+    // Remove URL
+    await competitor.removeUrl(competitorId, url);
+
+    return c.json({
+      status: "success",
+      data: {
+        removedUrl: url,
+      },
+    });
+  } catch (error) {
+    console.error("Remove URL error:", error);
+
+    if (error instanceof Error) {
+      if (error.message === "URL not found for this competitor") {
+        return c.json(
+          {
+            status: "error",
+            error: error.message,
+          },
+          404
+        );
+      }
+      if (error.message === "Competitor not found") {
+        return c.json(
+          {
+            status: "error",
+            error: error.message,
+          },
+          404
+        );
+      }
+    }
+
+    return c.json(
+      {
+        status: "error",
+        error: error instanceof Error ? error.message : "Failed to remove URL",
+      },
+      500
+    );
+  }
+});
+
+// Update any property of a competitor
+app.put(
+  updateCompetitorEndpoint,
+  zValidator("json", updateCompetitorSchema),
+  async (c) => {
+    try {
+      const id = parseInt(c.req.param("id"));
+      const input = await c.req.json();
+      const { competitor } = initializeServices(c);
+
+      const result = await competitor.updateCompetitor(id, input);
+
+      return c.json({
+        status: "success",
+        data: result,
+      });
+    } catch (error) {
+      console.error("Update competitor error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to update competitor",
+        },
+        500
+      );
+    }
+  }
+);
+
+// Delete entire competitor info including URLs
+app.delete(deleteCompetitorEndpoint, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const { competitor } = initializeServices(c);
+
+    await competitor.deleteCompetitor(id);
+
+    return c.json({
+      status: "success",
+      message: "Competitor deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete competitor error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete competitor",
+      },
+      500
+    );
+  }
+});
 
 export default app;

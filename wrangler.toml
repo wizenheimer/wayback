@@ -46,9 +46,14 @@ OPENAI_API_KEY = "some-api-key"
 # Bind a D1 database. D1 is Cloudflare’s native serverless SQL database.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#d1-databases
 [[d1_databases]]
-binding = "DB"
+binding = "DIFF_DB"
 database_name = "diff"
 database_id = "9d2e1ab5-06ce-4a8d-b741-024e9efc0f3b"
+
+[[d1_databases]]
+binding = "COMPETITOR_DB"
+database_name = "competitor"
+database_id = "7ad23391-258d-4a3e-8c7d-d1fb2c5b636d"
 
 # Bind a dispatch namespace. Use Workers for Platforms to deploy serverless functions programmatically on behalf of your customers.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#dispatch-namespace-bindings-workers-for-platforms
