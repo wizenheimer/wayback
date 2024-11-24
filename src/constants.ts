@@ -1,12 +1,16 @@
-const diffHistoryEndpoint = "/diff/history";
+const version = "/api/v1";
 
-const diffCreationEndpoint = "/diff/create";
+const diffHistoryEndpoint = `${version}/diff/history`;
 
-const screenshotContentQueryEndpoint = "/content/:hash/:date";
+const diffCreationEndpoint = `${version}/diff/create`;
 
-const screenshotImageQueryEndpoint = "/screenshot/:hash/:date";
+const screenshotContentQueryEndpoint = `${version}/content/:hash/:date`;
 
-const screenshotCreationEndpoint = "/screenshot";
+const screenshotImageQueryEndpoint = `${version}/screenshot/:hash/:date`;
+
+const screenshotCreationEndpoint = `${version}/screenshot`;
+
+const reportCreationEndpoint = `${version}/report`;
 
 export {
   diffHistoryEndpoint,
@@ -14,4 +18,5 @@ export {
   screenshotContentQueryEndpoint,
   screenshotImageQueryEndpoint,
   screenshotCreationEndpoint,
+  reportCreationEndpoint,
 };
