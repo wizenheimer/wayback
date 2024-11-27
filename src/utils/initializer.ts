@@ -5,6 +5,7 @@ import { StorageService } from "../service/storage";
 import { AIService } from "../service/ai";
 import { CompetitorService } from "../service/competitor";
 import { DiffService } from "../service/diff";
+import { NotificationService } from "../service/notification";
 
 // Initializes core services
 const initializeServices = (c: any) => {
@@ -24,7 +25,20 @@ const initializeServices = (c: any) => {
   const ai = new AIService(c.env.OPENAI_API_KEY);
   const diffService = new DiffService(screenshotService, diffDB, ai);
 
-  return { screenshotService, diffService, competitorService };
+  // Initialize Notification Service
+  const notificationService = new NotificationService({
+    resend: {
+      apiKey: c.env.RESEND_API_KEY,
+      fromEmail: c.env.FROM_EMAIL,
+    },
+  });
+
+  return {
+    screenshotService,
+    diffService,
+    competitorService,
+    notificationService,
+  };
 };
 
 export { initializeServices };
