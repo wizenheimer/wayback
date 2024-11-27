@@ -2,10 +2,7 @@
 
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import {
-  Bindings,
-  ScreenshotOptions,
-} from "./types";
+import { Bindings, ScreenshotOptions } from "./types";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "./config";
 import {
   AddUrlInput,
@@ -15,6 +12,7 @@ import {
   getScreenshotParamSchema,
   getScreenshotQuerySchema,
   historyQuerySchema,
+  notificationSchema,
   reportRequestSchema,
   screenshotSchema,
   updateCompetitorSchema,
@@ -33,6 +31,7 @@ import {
   listCompetitorsbyHash,
   listCompetitorsEndpoint,
   listCompetitorsURLs,
+  notifyEndpoint,
   reportCreationEndpoint,
   screenshotContentQueryEndpoint,
   screenshotCreationEndpoint,
@@ -667,6 +666,43 @@ app.delete(deleteCompetitorEndpoint, async (c) => {
           error instanceof Error
             ? error.message
             : "Failed to delete competitor",
+      },
+      500
+    );
+  }
+});
+
+// =======================================================
+//                Notifier Service Endpoints
+// =======================================================
+app.post(notifyEndpoint, zValidator("json", notificationSchema), async (c) => {
+  try {
+    const input = await c.req.json();
+    const { notificationService } = initializeServices(c);
+
+    const results = await notificationService.sendNotification(input);
+
+    return c.json({
+      status: "success",
+      data: results,
+    });
+  } catch (error) {
+    console.error("Notification error:", error);
+
+    if (error instanceof Error) {
+      return c.json(
+        {
+          status: "error",
+          error: error.message,
+        },
+        error.name === "ValidationError" ? 400 : 500
+      );
+    }
+
+    return c.json(
+      {
+        status: "error",
+        error: "An unknown error occurred",
       },
       500
     );

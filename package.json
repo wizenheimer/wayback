@@ -3,20 +3,27 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "email": "email dev --dir src/templates",
+    "email:build": "email build --dir src/templates"
   },
   "dependencies": {
     "@hono/swagger-ui": "^0.4.1",
     "@hono/zod-validator": "^0.4.1",
+    "@react-email/components": "^0.0.28",
     "cheerio": "^1.0.0",
     "hono": "^4.6.11",
     "openai": "^4.73.0",
+    "react-email": "^3.0.2",
+    "resend": "^4.0.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241112.0",
     "@types/cheerio": "^0.22.35",
     "@types/node": "^22.9.3",
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
     "wrangler": "^3.88.0"
   }
 }
