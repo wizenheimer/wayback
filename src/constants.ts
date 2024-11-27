@@ -56,6 +56,10 @@ const deleteCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
 // Get competitor info
 const getCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
 
+// ==================== Notification ====================
+
+const notifyEndpoint = `${versionStub}/notify`;
+
 export {
   diffHistoryEndpoint,
   diffCreationEndpoint,
@@ -73,4 +77,5 @@ export {
   listCompetitorsURLs,
   listCompetitorsbyHash,
   updateCompetitorURLEndpoint,
+  notifyEndpoint,
 };

@@ -183,6 +183,148 @@ const addUrlSchema = z.object({
 
 type AddUrlInput = z.infer<typeof addUrlSchema>;
 
+const diffReportEmailSchema = z
+  .object({
+    kind: z.literal("diff-report"),
+    competitor: z.string().min(1, "Competitor name is required"),
+    fromDate: z.string().regex(/^\d{8}$/, "Date must be in DDMMYYYY format"),
+    toDate: z.string().regex(/^\d{8}$/, "Date must be in DDMMYYYY format"),
+    data: z.object({
+      branding: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+      integration: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+      pricing: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+      positioning: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+      product: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+      partnership: z.object({
+        summary: z.string(),
+        changes: z.array(z.string()),
+        urls: z.record(z.array(z.string())),
+      }),
+    }),
+  })
+  .refine(
+    (data) => {
+      const from = parseInt(data.fromDate);
+      const to = parseInt(data.toDate);
+      return from <= to;
+    },
+    {
+      message: "fromDate must be earlier than or equal to toDate",
+    }
+  );
+
+const waitlistWelcomeEmailSchema = z.object({
+  kind: z.literal("waitlist-welcome"),
+  userName: z.string().optional(),
+  position: z.number().int().positive(),
+  estimatedWaitTime: z.string().min(1, "Estimated wait time is required"),
+  referralCode: z.string().min(1, "Referral code is required"),
+  referralLink: z.string().url("Invalid referral link URL"),
+});
+
+const trial0DayEmailSchema = z.object({
+  kind: z.literal("trial-0-day"),
+  userName: z.string().optional(),
+  upgradeLink: z.string().url("Invalid upgrade link URL"),
+});
+
+const trial3DayEmailSchema = z.object({
+  kind: z.literal("trial-3-day"),
+  userName: z.string().optional(),
+  upgradeLink: z.string().url("Invalid upgrade link URL"),
+});
+
+const trial7DayEmailSchema = z.object({
+  kind: z.literal("trial-7-day"),
+  userName: z.string().optional(),
+  upgradeLink: z.string().url("Invalid upgrade link URL"),
+});
+
+const trial14DayEmailSchema = z.object({
+  kind: z.literal("trial-14-day"),
+  userName: z.string().optional(),
+  upgradeLink: z.string().url("Invalid upgrade link URL"),
+});
+
+const successfulConversionEmailSchema = z.object({
+  kind: z.literal("successful-conversion"),
+  userName: z.string().optional(),
+});
+
+const failedConversionEmailSchema = z.object({
+  kind: z.literal("failed-conversion"),
+  userName: z.string().optional(),
+  upgradeLink: z.string().url("Invalid upgrade link URL"),
+});
+
+const waitlistOffboardingEmailSchema = z.object({
+  kind: z.literal("waitlist-offboarding"),
+  userName: z.string().optional(),
+  inviteLink: z.string().url("Invalid invite link URL"),
+});
+
+const waitlistOnboardingEmailSchema = z.object({
+  kind: z.literal("waitlist-onboarding"),
+  userName: z.string().optional(),
+});
+
+const emailTemplateSchema = z.discriminatedUnion("kind", [
+  diffReportEmailSchema._def.schema,
+  waitlistWelcomeEmailSchema,
+  trial0DayEmailSchema,
+  trial3DayEmailSchema,
+  trial7DayEmailSchema,
+  trial14DayEmailSchema,
+  successfulConversionEmailSchema,
+  failedConversionEmailSchema,
+  waitlistOffboardingEmailSchema,
+  waitlistOnboardingEmailSchema,
+]);
+
+export const notificationSchema = z
+  .object({
+    templateId: z.enum([
+      "diff-report",
+      "waitlist-welcome",
+      "trial-0-day",
+      "trial-3-day",
+      "trial-7-day",
+      "trial-14-day",
+      "successful-conversion",
+      "failed-conversion",
+      "waitlist-offboarding",
+      "waitlist-onboarding",
+    ]),
+    emailTemplateParams: emailTemplateSchema,
+    emails: z
+      .array(z.string().email("Invalid email address"))
+      .min(1, "At least one email is required")
+      .max(100, "Maximum 100 emails per request"),
+  })
+  .refine((data) => data.templateId === data.emailTemplateParams.kind, {
+    message: "templateId must match emailTemplateParams.kind",
+  });
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,

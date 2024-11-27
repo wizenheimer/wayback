@@ -76,8 +76,8 @@ export const WaitlistOffboarding = ({
             <Text style={supportText}>
               Need help? We've got your back:
             </Text>
-            <Link href="mailto:support@byrd.com" style={supportLink}>
-              support@byrd.com
+            <Link href="mailto:hey@byrd.com" style={supportLink}>
+              hey@byrd.com
             </Link>
           </Section>
 
