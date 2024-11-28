@@ -109,6 +109,9 @@ export type ScreenshotOptions = {
   // The URL of the website to take a screenshot of.
   url: string;
 
+  // Run ID for the screenshot
+  runId: string;
+
   // Selector Options
   // A selector to take screenshot of.
   selector?: string;
@@ -264,7 +267,7 @@ export type Bindings = {
   // Key bindings
   SCREENSHOT_SERVICE_API_KEY: string;
   SCREENSHOT_SERVICE_ORIGIN: string;
-  ARCHIVE_API_TOKEN: string;
+  WAYBACK_API_TOKEN: string;
   OPENAI_API_KEY: string;
 
   // R2Bucket bindings
@@ -290,8 +293,25 @@ export interface DiffAnalysis {
 
 export interface ReportRequest {
   urls: string[];
-  timestamp1?: string; // optional, will use most recent if not provided
-  timestamp2?: string; // optional, will use second most recent if not provided
+  runId1?: string;
+  runId2?: string;
+  weekNumber?: string;
+}
+
+export interface DiffRequest {
+  url: string;
+  runId1: string;
+  runId2: string;
+  weekNumber1?: string; // Optional, will use current week if not provided
+  weekNumber2?: string; // Optional, will use current week if not provided
+}
+
+export interface DiffHistoryQuery {
+  url: string;
+  fromRunId?: string;
+  toRunId?: string;
+  weekNumber?: string; // Optional, to filter by specific week
+  limit?: number;
 }
 
 export interface DiffReport {
@@ -509,4 +529,12 @@ export interface NotificationServiceConfig {
     fromEmail: string;
     replyTo?: string;
   };
+}
+
+export interface Subscription {
+  id: number;
+  competitor_id: number;
+  email: string;
+  created_at: string;
+  status: "active" | "unsubscribed";
 }

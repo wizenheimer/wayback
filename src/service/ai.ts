@@ -1,4 +1,4 @@
-// src/service/openai.ts
+// src/service/ai.ts
 
 import OpenAI from "openai";
 import { DiffAnalysis } from "../types";

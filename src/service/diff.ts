@@ -1,5 +1,13 @@
 // src/service/diff.ts
-import { AggregatedReport, DiffAnalysis } from "../types";
+
+import {
+  AggregatedReport,
+  DiffAnalysis,
+  DiffHistoryQuery,
+  DiffRequest,
+  ReportRequest,
+} from "../types";
+import { getWeekNumber } from "../utils/path";
 import { AIService } from "./ai";
 import { DBService } from "./db";
 import { ScreenshotService } from "./screenshot";
@@ -11,51 +19,60 @@ export class DiffService {
     private ai: AIService
   ) {}
 
-  async createDiff(params: {
-    url: string;
-    timestamp1: string;
-    timestamp2: string;
-  }): Promise<{
+  async createDiff(params: DiffRequest): Promise<{
     differences: DiffAnalysis;
     metadata: {
       url: string;
-      timestamp1: string;
-      timestamp2: string;
+      runId1: string;
+      runId2: string;
+      weekNumber1: string;
+      weekNumber2: string;
       analyzed_at: string;
     };
   }> {
-    const { url, timestamp1, timestamp2 } = params;
+    const {
+      url,
+      runId1,
+      runId2,
+      weekNumber1 = getWeekNumber(),
+      weekNumber2 = getWeekNumber(),
+    } = params;
 
     // Ensure table exists
     await this.diffDB.ensureDiffTable();
 
     // Fetch both content versions
     const [content1Obj, content2Obj] = await Promise.all([
-      this.screenshot.getScreenshotContentFromUrl(url, timestamp1),
-      this.screenshot.getScreenshotContentFromUrl(url, timestamp2),
+      this.screenshot.getScreenshotContentFromUrl(url, weekNumber1, runId1),
+      this.screenshot.getScreenshotContentFromUrl(url, weekNumber2, runId2),
     ]);
 
     if (!content1Obj || !content2Obj) {
-      throw new Error("One or both content versions not found");
+      if (!content1Obj) {
+        throw new Error("First content version not found");
+      } else if (!content2Obj) {
+        throw new Error("Second content version not found");
+      }
+      throw new Error("Both content versions not found");
     }
 
-    // Get text content
+    // Get text content and analyze differences
     const [content1Text, content2Text] = await Promise.all([
       content1Obj.text(),
       content2Obj.text(),
     ]);
 
-    // Analyze with OpenAI
     const differences = await this.ai.analyzeDifferences(
       content1Text,
       content2Text
     );
 
-    // Store in database
+    // Store in database with week number
     await this.diffDB.insertDiff({
       url,
-      timestamp1,
-      timestamp2,
+      runId1,
+      runId2,
+      weekNumber: weekNumber2, // Store using the most recent week number
       differences,
     });
 
@@ -63,34 +80,32 @@ export class DiffService {
       differences,
       metadata: {
         url,
-        timestamp1,
-        timestamp2,
+        runId1,
+        runId2,
+        weekNumber1,
+        weekNumber2,
         analyzed_at: new Date().toISOString(),
       },
     };
   }
 
-  async getDiffHistory(params: {
-    url: string;
-    from?: string;
-    to?: string;
-    limit?: number;
-  }) {
-    const { url, from, to, limit } = params;
+  async getDiffHistory(params: DiffHistoryQuery) {
+    const { url, fromRunId, toRunId, weekNumber, limit } = params;
 
-    // Validate date range if both are provided
-    if (from && to && from > to) {
-      throw new Error("From date must be earlier than or equal to to date");
+    // Validate run IDs if both are provided
+    if (fromRunId && toRunId && fromRunId > toRunId) {
+      throw new Error("fromRunId must be earlier than or equal to toRunId");
     }
 
     // Ensure table exists
     await this.diffDB.ensureDiffTable();
 
-    // Get history with date range
+    // Get history with new parameters
     const results = await this.diffDB.getDiffHistory({
       url,
-      from,
-      to,
+      fromRunId,
+      toRunId,
+      weekNumber,
       limit,
     });
 
@@ -98,9 +113,10 @@ export class DiffService {
       results,
       metadata: {
         url,
+        weekNumber: weekNumber || "all",
         dateRange: {
-          from: from || "beginning",
-          to: to || "present",
+          fromRun: fromRunId || "beginning",
+          toRun: toRunId || "present",
         },
         count: results.length,
         limit,
@@ -108,12 +124,8 @@ export class DiffService {
     };
   }
 
-  async generateReport(params: {
-    urls: string[];
-    timestamp1?: string;
-    timestamp2?: string;
-  }): Promise<AggregatedReport> {
-    const { urls, timestamp1, timestamp2 } = params;
+  async generateReport(params: ReportRequest): Promise<AggregatedReport> {
+    const { urls, runId1, runId2, weekNumber = getWeekNumber() } = params;
 
     // Initialize the aggregated report structure
     const aggregatedReport: AggregatedReport = {
@@ -150,8 +162,9 @@ export class DiffService {
       try {
         const diffs = await this.diffDB.getDiffHistory({
           url,
-          from: timestamp1,
-          to: timestamp2,
+          fromRunId: runId1,
+          toRunId: runId2,
+          weekNumber,
           limit: 1,
         });
 

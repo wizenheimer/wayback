@@ -1,4 +1,5 @@
 // src/schema.ts
+
 import { z } from "zod";
 import { BlockableResources, Timezones, IpCountries } from "./types";
 
@@ -42,6 +43,8 @@ const screenshotSchema = z
   .object({
     // Target Options
     url: z.string().url(),
+
+    runId: z.string(), // Required field for identifying the capture
 
     // Selector Options
     selector: z.string().optional(),
@@ -122,20 +125,21 @@ const getScreenshotQuerySchema = z.object({
 
 const getScreenshotParamSchema = z.object({
   hash: z.string(),
-  date: z.string().length(8).regex(/^\d+$/),
+  weekNumber: z.string().length(2).regex(/^\d+$/),
+  runId: z.string(),
 });
 
 const diffRequestSchema = z.object({
   url: z.string().url(),
-  timestamp1: z.string().length(8).regex(/^\d+$/),
-  timestamp2: z.string().length(8).regex(/^\d+$/),
+  runId1: z.string(),
+  runId2: z.string(),
 });
 
-// Schema for history query parameters
 const historyQuerySchema = z.object({
   url: z.string().url(),
-  from: z.string().length(8).regex(/^\d+$/).optional(),
-  to: z.string().length(8).regex(/^\d+$/).optional(),
+  fromRunId: z.string().optional(),
+  toRunId: z.string().optional(),
+  weekNumber: z.string().length(2).regex(/^\d+$/).optional(),
   limit: z.coerce.number().min(1).max(100).optional(),
 });
 
@@ -325,6 +329,10 @@ export const notificationSchema = z
     message: "templateId must match emailTemplateParams.kind",
   });
 
+const subscriptionSchema = z.object({
+  email: z.string().email("Invalid email format"),
+});
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
@@ -332,6 +340,7 @@ export {
   screenshotSchema,
   diffRequestSchema,
   historyQuerySchema,
+  subscriptionSchema,
   reportRequestSchema,
   CreateCompetitorInput,
   UpdateCompetitorInput,

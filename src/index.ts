@@ -15,6 +15,7 @@ import {
   notificationSchema,
   reportRequestSchema,
   screenshotSchema,
+  subscriptionSchema,
   updateCompetitorSchema,
 } from "./schema";
 import { initializeServices } from "./utils/initializer";
@@ -36,6 +37,7 @@ import {
   screenshotContentQueryEndpoint,
   screenshotCreationEndpoint,
   screenshotImageQueryEndpoint,
+  subscribeCompetitorEndpoint,
   updateCompetitorEndpoint,
   updateCompetitorURLEndpoint,
 } from "./constants";
@@ -61,7 +63,7 @@ app.get(docsStub, (c) => {
 // =======================================================
 
 app.use(`${baseStub}/*`, async (c, next) => {
-  const bearer = bearerAuth({ token: c.env.ARCHIVE_API_TOKEN });
+  const bearer = bearerAuth({ token: c.env.WAYBACK_API_TOKEN });
   return bearer(c, next);
 });
 
@@ -71,12 +73,25 @@ app.use(`${baseStub}/*`, async (c, next) => {
 
 // Trigger a screenshot capture for a given URL
 // Store the image and text content in the storage service
+// Trigger a screenshot capture for a given URL
 app.post(
   screenshotCreationEndpoint,
   zValidator("json", screenshotSchema),
   async (c) => {
     try {
       const userOptions = await c.req.json<ScreenshotOptions>();
+      const { runId } = userOptions;
+
+      if (!runId) {
+        return c.json(
+          {
+            status: "error",
+            error: "runId is required",
+          },
+          400
+        );
+      }
+
       const options = { ...DEFAULT_SCREENSHOT_OPTIONS, ...userOptions };
       const { screenshotService } = initializeServices(c);
 
@@ -102,17 +117,22 @@ app.post(
 
 // Return the image content of a screenshot
 // This requires the content to be stored in the storage service
+// Return the image content of a screenshot
 app.get(
   screenshotImageQueryEndpoint,
   zValidator("query", getScreenshotQuerySchema),
   zValidator("param", getScreenshotParamSchema),
   async (c) => {
     try {
-      const { hash, date } = c.req.valid("param");
+      const { hash, weekNumber, runId } = c.req.valid("param");
       const { format } = c.req.valid("query");
 
       const { screenshotService } = initializeServices(c);
-      const object = await screenshotService.getScreenshotImage(hash, date);
+      const object = await screenshotService.getScreenshotImage(
+        hash,
+        weekNumber,
+        runId
+      );
 
       if (!object) {
         return c.json(
@@ -170,15 +190,20 @@ app.get(
 
 // Return the text content of a screenshot
 // This requires the content to be stored in the storage service
+// Return the text content of a screenshot
 app.get(
   screenshotContentQueryEndpoint,
   zValidator("param", getScreenshotParamSchema),
   async (c) => {
     try {
-      const { hash, date } = c.req.valid("param");
+      const { hash, weekNumber, runId } = c.req.valid("param");
 
       const { screenshotService } = initializeServices(c);
-      const object = await screenshotService.getScreenshotContent(hash, date);
+      const object = await screenshotService.getScreenshotContent(
+        hash,
+        weekNumber,
+        runId
+      );
 
       if (!object) {
         return c.json(
@@ -215,19 +240,22 @@ app.get(
 
 // Generate a diff for a given url between any two content versions
 // This requires the content to be stored in the storage service
+// Update the diff creation endpoint
 app.post(
   diffCreationEndpoint,
   zValidator("json", diffRequestSchema),
   async (c) => {
     try {
-      const { url, timestamp1, timestamp2 } = await c.req.json();
-
+      const { url, runId1, runId2, weekNumber1, weekNumber2 } =
+        await c.req.json();
       const { diffService } = initializeServices(c);
 
       const result = await diffService.createDiff({
         url,
-        timestamp1,
-        timestamp2,
+        runId1,
+        runId2,
+        weekNumber1,
+        weekNumber2,
       });
 
       return c.json({
@@ -257,13 +285,15 @@ app.get(
   zValidator("query", historyQuerySchema),
   async (c) => {
     try {
-      const { url, from, to, limit } = c.req.valid("query");
+      const { url, fromRunId, toRunId, weekNumber, limit } =
+        c.req.valid("query");
       const { diffService } = initializeServices(c);
 
       const result = await diffService.getDiffHistory({
         url,
-        from,
-        to,
+        fromRunId,
+        toRunId,
+        weekNumber,
         limit,
       });
 
@@ -289,18 +319,20 @@ app.get(
 
 // Query and aggregate diffs for a list of URLs within a time range
 // This requires the content to be stored in the storage service
+// Generate aggregated report for multiple URLs
 app.post(
   reportCreationEndpoint,
   zValidator("json", reportRequestSchema),
   async (c) => {
     try {
-      const { urls, timestamp1, timestamp2 } = await c.req.json();
+      const { urls, runId1, runId2, weekNumber } = await c.req.json();
       const { diffService } = initializeServices(c);
 
       const aggregatedReport = await diffService.generateReport({
         urls,
-        timestamp1,
-        timestamp2,
+        runId1,
+        runId2,
+        weekNumber,
       });
 
       return c.json({
@@ -703,6 +735,153 @@ app.post(notifyEndpoint, zValidator("json", notificationSchema), async (c) => {
       {
         status: "error",
         error: "An unknown error occurred",
+      },
+      500
+    );
+  }
+});
+
+// =======================================================
+//                Subscription Service Endpoints
+// =======================================================
+// Subscribe to competitor updates
+app.post(
+  subscribeCompetitorEndpoint,
+  zValidator("json", subscriptionSchema),
+  async (c) => {
+    try {
+      const id = parseInt(c.req.param("id"));
+      const { email } = await c.req.json();
+
+      const { subscriptionService, competitorService } = initializeServices(c);
+
+      // Verify competitor exists
+      const competitor = await competitorService.getCompetitor(id);
+      if (!competitor) {
+        return c.json(
+          {
+            status: "error",
+            error: "Competitor not found",
+          },
+          404
+        );
+      }
+
+      const subscription = await subscriptionService.subscribe(id, email);
+
+      return c.json({
+        status: "success",
+        data: subscription,
+      });
+    } catch (error) {
+      console.error("Subscription error:", error);
+
+      if (
+        error instanceof Error &&
+        error.message.includes("UNIQUE constraint failed")
+      ) {
+        return c.json(
+          {
+            status: "error",
+            error: "Already subscribed to this competitor",
+          },
+          409
+        );
+      }
+
+      return c.json(
+        {
+          status: "error",
+          error: error instanceof Error ? error.message : "Failed to subscribe",
+        },
+        500
+      );
+    }
+  }
+);
+
+// Unsubscribe from competitor updates
+app.delete(subscribeCompetitorEndpoint, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+    const email = c.req.query("email");
+
+    if (!email) {
+      return c.json(
+        {
+          status: "error",
+          error: "Email parameter is required",
+        },
+        400
+      );
+    }
+
+    const { subscriptionService, competitorService } = initializeServices(c);
+
+    // Verify competitor exists
+    const competitor = await competitorService.getCompetitor(id);
+    if (!competitor) {
+      return c.json(
+        {
+          status: "error",
+          error: "Competitor not found",
+        },
+        404
+      );
+    }
+
+    await subscriptionService.unsubscribe(id, email);
+
+    return c.json({
+      status: "success",
+      message: "Successfully unsubscribed",
+    });
+  } catch (error) {
+    console.error("Unsubscribe error:", error);
+    return c.json(
+      {
+        status: "error",
+        error: error instanceof Error ? error.message : "Failed to unsubscribe",
+      },
+      500
+    );
+  }
+});
+
+// Get all subscribers for a competitor
+app.get(subscribeCompetitorEndpoint, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"));
+
+    const { subscriptionService, competitorService } = initializeServices(c);
+
+    // Verify competitor exists
+    const competitor = await competitorService.getCompetitor(id);
+    if (!competitor) {
+      return c.json(
+        {
+          status: "error",
+          error: "Competitor not found",
+        },
+        404
+      );
+    }
+
+    const subscribers = await subscriptionService.getSubscribersByCompetitor(
+      id
+    );
+
+    return c.json({
+      status: "success",
+      data: subscribers,
+    });
+  } catch (error) {
+    console.error("Get subscribers error:", error);
+    return c.json(
+      {
+        status: "error",
+        error:
+          error instanceof Error ? error.message : "Failed to get subscribers",
       },
       500
     );

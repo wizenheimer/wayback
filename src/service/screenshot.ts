@@ -20,6 +20,8 @@ export class ScreenshotService {
       options
     );
 
+    const { runId } = options;
+
     const response = await fetch(screenshotUrl);
 
     if (!response.ok) {
@@ -53,6 +55,7 @@ export class ScreenshotService {
     const { screenshotPath, contentPath } = await this.storage.storeScreenshot(
       options.url,
       imageData,
+      runId,
       { ...screenshotMetadata, contentType }
     );
 
@@ -65,7 +68,7 @@ export class ScreenshotService {
           const cleanedContent = cleanHtmlContent(htmlContent);
 
           // Store content inside R2
-          await this.storage.storeContent(options.url, cleanedContent, {
+          await this.storage.storeContent(options.url, cleanedContent, runId, {
             ...screenshotMetadata,
             sourceUrl: contentUrl,
             contentType: contentResponse.headers.get("content-type"),
@@ -88,23 +91,29 @@ export class ScreenshotService {
     };
   }
 
-  async getScreenshotImage(hash: string, date: string) {
-    const path = `screenshot/${hash}/${date}`;
-    return await this.storage.getScreenshot(path);
+  async getScreenshotImage(hash: string, weekNumber: string, runId: string) {
+    return await this.storage.getScreenshot(hash, weekNumber, runId);
   }
 
-  async getScreenshotContent(hash: string, date: string) {
-    const path = `content/${hash}/${date}`;
-    return await this.storage.getContent(path);
+  async getScreenshotContent(hash: string, weekNumber: string, runId: string) {
+    return await this.storage.getContent(hash, weekNumber, runId);
   }
 
-  async getScreenshotContentFromUrl(url: string, date: string) {
+  async getScreenshotContentFromUrl(
+    url: string,
+    weekNumber: string,
+    runId: string
+  ) {
     const hash = generatePathHash(url);
-    return await this.getScreenshotContent(hash, date);
+    return await this.getScreenshotContent(hash, weekNumber, runId);
   }
 
-  async getScreenshotImageFromUrl(url: string, date: string) {
+  async getScreenshotImageFromUrl(
+    url: string,
+    weekNumber: string,
+    runId: string
+  ) {
     const hash = generatePathHash(url);
-    return await this.getScreenshotImage(hash, date);
+    return await this.getScreenshotImage(hash, weekNumber, runId);
   }
 }

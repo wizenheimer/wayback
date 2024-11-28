@@ -1,3 +1,5 @@
+// src/service/notification.ts
+
 import { Resend } from "resend";
 import {
   EmailTemplateId,

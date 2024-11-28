@@ -6,6 +6,7 @@ import { AIService } from "../service/ai";
 import { CompetitorService } from "../service/competitor";
 import { DiffService } from "../service/diff";
 import { NotificationService } from "../service/notification";
+import { SubscriptionService } from "../service/subscription";
 
 // Initializes core services
 const initializeServices = (c: any) => {
@@ -25,6 +26,9 @@ const initializeServices = (c: any) => {
   const ai = new AIService(c.env.OPENAI_API_KEY);
   const diffService = new DiffService(screenshotService, diffDB, ai);
 
+  // Initialize Subscription Service (using same DB as competitors)
+  const subscriptionService = new SubscriptionService(c.env.COMPETITOR_DB);
+
   // Initialize Notification Service
   const notificationService = new NotificationService({
     resend: {
@@ -37,6 +41,7 @@ const initializeServices = (c: any) => {
     screenshotService,
     diffService,
     competitorService,
+    subscriptionService,
     notificationService,
   };
 };

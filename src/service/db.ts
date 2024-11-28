@@ -12,8 +12,9 @@ export class DBService {
       CREATE TABLE IF NOT EXISTS content_diffs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         url TEXT NOT NULL,
-        timestamp1 TEXT NOT NULL,
-        timestamp2 TEXT NOT NULL,
+        run_id1 TEXT NOT NULL,
+        run_id2 TEXT NOT NULL,
+        week_number TEXT NOT NULL,
         branding_changes TEXT NOT NULL,
         integration_changes TEXT NOT NULL,
         pricing_changes TEXT NOT NULL,
@@ -29,19 +30,21 @@ export class DBService {
 
   async insertDiff(params: {
     url: string;
-    timestamp1: string;
-    timestamp2: string;
+    runId1: string;
+    runId2: string;
+    weekNumber: string;
     differences: DiffAnalysis;
   }): Promise<void> {
-    const { url, timestamp1, timestamp2, differences } = params;
+    const { url, runId1, runId2, weekNumber, differences } = params;
 
     await this.db
       .prepare(
         `
       INSERT INTO content_diffs (
-        url, 
-        timestamp1, 
-        timestamp2, 
+        url,
+        run_id1,
+        run_id2,
+        week_number,
         branding_changes,
         integration_changes,
         pricing_changes,
@@ -49,13 +52,14 @@ export class DBService {
         positioning_changes,
         partnership_changes
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `
       )
       .bind(
         url,
-        timestamp1,
-        timestamp2,
+        runId1,
+        runId2,
+        weekNumber,
         JSON.stringify(differences.branding),
         JSON.stringify(differences.integration),
         JSON.stringify(differences.pricing),
@@ -68,37 +72,43 @@ export class DBService {
 
   async getDiffHistory(params: {
     url: string;
-    from?: string; // Format: DDMMYYYY
-    to?: string; // Format: DDMMYYYY
+    fromRunId?: string;
+    toRunId?: string;
+    weekNumber?: string;
     limit?: number;
   }) {
-    const { url, from, to, limit = 10 } = params;
+    const { url, fromRunId, toRunId, weekNumber, limit = 10 } = params;
 
     // Build the query based on provided parameters
     let query = `
-      SELECT * FROM content_diffs 
+      SELECT * FROM content_diffs
       WHERE url = ?
     `;
     const bindings: any[] = [url];
 
-    if (from && to) {
+    if (weekNumber) {
+      query += ` AND week_number = ?`;
+      bindings.push(weekNumber);
+    }
+
+    if (fromRunId && toRunId) {
       query += ` AND (
-        (timestamp1 BETWEEN ? AND ?) OR 
-        (timestamp2 BETWEEN ? AND ?)
+        (run_id1 BETWEEN ? AND ?) OR
+        (run_id2 BETWEEN ? AND ?)
       )`;
-      bindings.push(from, to, from, to);
-    } else if (from) {
-      query += ` AND (timestamp1 >= ? OR timestamp2 >= ?)`;
-      bindings.push(from, from);
-    } else if (to) {
-      query += ` AND (timestamp1 <= ? OR timestamp2 <= ?)`;
-      bindings.push(to, to);
+      bindings.push(fromRunId, toRunId, fromRunId, toRunId);
+    } else if (fromRunId) {
+      query += ` AND (run_id1 >= ? OR run_id2 >= ?)`;
+      bindings.push(fromRunId, fromRunId);
+    } else if (toRunId) {
+      query += ` AND (run_id1 <= ? OR run_id2 <= ?)`;
+      bindings.push(toRunId, toRunId);
     }
 
     query += ` ORDER BY created_at DESC LIMIT ?`;
     bindings.push(limit);
 
-    const results: any = await this.db
+    const results = await this.db
       .prepare(query)
       .bind(...bindings)
       .all();
