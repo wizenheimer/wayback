@@ -1,3 +1,5 @@
+// src/service/competitor.ts
+
 import { CreateCompetitorInput, UpdateCompetitorInput } from "../schema";
 import { Competitor, CompetitorUrl, CompetitorWithUrls } from "../types";
 import { generatePathHash } from "../utils/path";

@@ -1,6 +1,6 @@
 // src/service/storage.ts
 
-import { generatePathHash, getDatePath } from "../utils/path";
+import { generatePathHash, getWeekNumber } from "../utils/path";
 
 export class StorageService {
   constructor(private bucket: R2Bucket) {}
@@ -8,15 +8,16 @@ export class StorageService {
   async storeScreenshot(
     url: string,
     data: ArrayBuffer,
+    runId: string,
     metadata: Record<string, any>
   ) {
     const urlHash = generatePathHash(url);
-    const datePath = getDatePath();
-    const screenshotPath = `screenshot/${urlHash}/${datePath}`;
-    const contentPath = `content/${urlHash}/${datePath}`;
+    const weekNumber = getWeekNumber();
+    const screenshotPath = `screenshot/${urlHash}/${weekNumber}/${runId}`;
+    const contentPath = `content/${urlHash}/${weekNumber}/${runId}`;
 
     await this.bucket.put(screenshotPath, data, {
-      customMetadata: metadata,
+      customMetadata: { ...metadata, weekNumber },
     });
 
     return { screenshotPath, contentPath };
@@ -25,26 +26,27 @@ export class StorageService {
   async storeContent(
     url: string,
     content: string,
+    runId: string,
     metadata: Record<string, any>
   ) {
     const urlHash = generatePathHash(url);
-    const datePath = getDatePath();
-    const contentPath = `content/${urlHash}/${datePath}`;
+    const weekNumber = getWeekNumber();
+    const contentPath = `content/${urlHash}/${weekNumber}/${runId}`;
 
     await this.bucket.put(contentPath, content, {
-      customMetadata: metadata,
+      customMetadata: { ...metadata, weekNumber },
     });
-
-    console.log("Stored content", { contentPath, content });
 
     return contentPath;
   }
 
-  async getScreenshot(path: string) {
+  async getScreenshot(hash: string, weekNumber: string, runId: string) {
+    const path = `screenshot/${hash}/${weekNumber}/${runId}`;
     return await this.bucket.get(path);
   }
 
-  async getContent(path: string) {
+  async getContent(hash: string, weekNumber: string, runId: string) {
+    const path = `content/${hash}/${weekNumber}/${runId}`;
     return await this.bucket.get(path);
   }
 }

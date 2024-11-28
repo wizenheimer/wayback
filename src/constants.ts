@@ -1,3 +1,5 @@
+// src/constants.ts
+
 const docsStub = "/docs";
 
 const baseStub = "/api";
@@ -7,10 +9,10 @@ const versionStub = `${baseStub}/v1`;
 // ==================== Screenshots ====================
 
 // Get the content of a screenshot
-const screenshotContentQueryEndpoint = `${versionStub}/content/:hash/:date`;
+const screenshotContentQueryEndpoint = `${versionStub}/content/:hash/:weekNumber/:runId`;
 
 // Get the image of a screenshot
-const screenshotImageQueryEndpoint = `${versionStub}/screenshot/:hash/:date`;
+const screenshotImageQueryEndpoint = `${versionStub}/screenshot/:hash/:weekNumber/:runId`;
 
 // Create a new screenshot
 const screenshotCreationEndpoint = `${versionStub}/screenshot`;

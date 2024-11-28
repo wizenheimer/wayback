@@ -1,6 +1,7 @@
+// src/service/subscription.ts
+
 import { Subscription } from "../types";
 
-// src/service/subscription.ts
 export class SubscriptionService {
   constructor(private db: D1Database) {}
 
