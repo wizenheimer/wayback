@@ -510,3 +510,11 @@ export interface NotificationServiceConfig {
     replyTo?: string;
   };
 }
+
+export interface Subscription {
+  id: number;
+  competitor_id: number;
+  email: string;
+  created_at: string;
+  status: "active" | "unsubscribed";
+}

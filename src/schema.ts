@@ -325,6 +325,10 @@ export const notificationSchema = z
     message: "templateId must match emailTemplateParams.kind",
   });
 
+const subscriptionSchema = z.object({
+  email: z.string().email("Invalid email format"),
+});
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
@@ -332,6 +336,7 @@ export {
   screenshotSchema,
   diffRequestSchema,
   historyQuerySchema,
+  subscriptionSchema,
   reportRequestSchema,
   CreateCompetitorInput,
   UpdateCompetitorInput,

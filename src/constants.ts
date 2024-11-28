@@ -56,11 +56,15 @@ const deleteCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
 // Get competitor info
 const getCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
 
+// Subscribe to competitor updates
+const subscribeCompetitorEndpoint = `${versionStub}/competitors/:id/subscribe`;
+
 // ==================== Notification ====================
 
 const notifyEndpoint = `${versionStub}/notify`;
 
 export {
+  subscribeCompetitorEndpoint,
   diffHistoryEndpoint,
   diffCreationEndpoint,
   screenshotContentQueryEndpoint,
