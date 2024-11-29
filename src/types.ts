@@ -291,11 +291,31 @@ export interface DiffAnalysis {
   partnership: string[];
 }
 
+export interface CategoryBase {
+  changes: string[];
+  urls: Record<string, string[]>;
+}
+
+export interface CategoryEnriched extends CategoryBase {
+  summary: string;
+}
+
+export interface DiffData {
+  branding: CategoryBase | CategoryEnriched;
+  integration: CategoryBase | CategoryEnriched;
+  pricing: CategoryBase | CategoryEnriched;
+  positioning: CategoryBase | CategoryEnriched;
+  product: CategoryBase | CategoryEnriched;
+  partnership: CategoryBase | CategoryEnriched;
+}
+
 export interface ReportRequest {
   urls: string[];
   runId1?: string;
   runId2?: string;
   weekNumber?: string;
+  competitor: string; // Added to match email template
+  enriched?: boolean;
 }
 
 export interface DiffRequest {
@@ -326,41 +346,20 @@ export interface DiffReport {
 }
 
 export interface AggregatedReport {
-  branding: {
-    changes: string[];
-    urls: Record<string, string[]>; // url -> changes mapping
-  };
-  integration: {
-    changes: string[];
-    urls: Record<string, string[]>;
-  };
-  pricing: {
-    changes: string[];
-    urls: Record<string, string[]>;
-  };
-  product: {
-    changes: string[];
-    urls: Record<string, string[]>;
-  };
-  positioning: {
-    changes: string[];
-    urls: Record<string, string[]>;
-  };
-  partnership: {
-    changes: string[];
-    urls: Record<string, string[]>;
-  };
+  data: DiffData;
   metadata: {
     generatedAt: string;
-    timeRange: {
-      from: string;
-      to: string;
+    weekNumber: string;
+    runRange: {
+      fromRun: string;
+      toRun: string;
     };
+    competitor: string;
     urlCount: number;
     processedUrls: {
-      successful: string[]; // URLs successfully processed
-      failed: string[]; // URLs that encountered errors
-      skipped: string[]; // URLs with no diffs in time range
+      successful: string[];
+      failed: string[];
+      skipped: string[];
     };
     processingStats: {
       totalUrls: number;
@@ -368,7 +367,8 @@ export interface AggregatedReport {
       failureCount: number;
       skippedCount: number;
     };
-    errors: Record<string, string>; // URL -> error message mapping
+    errors: Record<string, string>;
+    enriched: boolean;
   };
 }
 

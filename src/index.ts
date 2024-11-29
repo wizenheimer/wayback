@@ -325,7 +325,8 @@ app.post(
   zValidator("json", reportRequestSchema),
   async (c) => {
     try {
-      const { urls, runId1, runId2, weekNumber } = await c.req.json();
+      const { urls, runId1, runId2, weekNumber, enriched, competitor } =
+        await c.req.json();
       const { diffService } = initializeServices(c);
 
       const aggregatedReport = await diffService.generateReport({
@@ -333,6 +334,8 @@ app.post(
         runId1,
         runId2,
         weekNumber,
+        enriched,
+        competitor,
       });
 
       return c.json({
