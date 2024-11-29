@@ -1,6 +1,5 @@
 // src/service/subscription.ts
-
-import { Subscription } from "../types";
+import { Subscription } from "../types/notification";
 
 export class SubscriptionService {
   constructor(private db: D1Database) {}

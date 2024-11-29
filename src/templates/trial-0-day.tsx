@@ -8,7 +8,6 @@ import {
   Section,
   Text,
   Link,
-  Hr,
 } from "@react-email/components";
 
 interface Trial0DayEmailProps {
@@ -64,7 +63,7 @@ export const Trial0DayEmail = ({
             </Link>
           </Section>
 
-          <Text style={footer}>ByrdLabs • San Francisco</Text>
+          <Text style={footer}>ByrdLabs . San Francisco</Text>
         </Container>
       </Body>
     </Html>
@@ -118,35 +117,6 @@ const messageText = {
   marginBottom: "16px",
 } as React.CSSProperties;
 
-const divider = {
-  borderTop: "1px solid #eaeaea",
-  marginTop: "24px",
-  marginBottom: "24px",
-} as React.CSSProperties;
-
-const valueSection = {
-  marginBottom: "32px",
-} as React.CSSProperties;
-
-const sectionTitle = {
-  fontSize: "12px",
-  fontWeight: "500",
-  color: "#666",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const bulletList = {
-  marginBottom: "24px",
-} as React.CSSProperties;
-
-const bulletText = {
-  fontSize: "16px",
-  color: "#333",
-  lineHeight: "1.6",
-  marginBottom: "12px",
-} as React.CSSProperties;
 
 const ctaSection = {
   textAlign: "center",
@@ -170,18 +140,6 @@ const ctaSubtext = {
   color: "#666",
   fontStyle: "italic",
   marginTop: "12px",
-} as React.CSSProperties;
-
-const closingSection = {
-  textAlign: "center",
-  marginBottom: "32px",
-} as React.CSSProperties;
-
-const closingText = {
-  fontSize: "18px",
-  fontWeight: "500",
-  color: "#333",
-  lineHeight: "1.5",
 } as React.CSSProperties;
 
 const supportSection = {

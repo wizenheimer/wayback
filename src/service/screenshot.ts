@@ -1,10 +1,9 @@
 // src/service/screenshot.ts
-
-import { ScreenshotOptions, ScreenshotMetadata } from "../types";
 import { createScreenshotUrl } from "../utils/url";
 import { cleanHtmlContent } from "../utils/content";
 import { StorageService } from "./storage";
 import { generatePathHash } from "../utils/path";
+import { ScreenshotMetadata, ScreenshotOptions } from "../types/screenshot";
 
 export class ScreenshotService {
   constructor(

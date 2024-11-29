@@ -1,6 +1,5 @@
 // src/config.ts
-
-import { ScreenshotOptions } from "./types";
+import { ScreenshotOptions } from "./types/screenshot";
 
 export const DEFAULT_SCREENSHOT_OPTIONS: Partial<ScreenshotOptions> = {
   // Capture options

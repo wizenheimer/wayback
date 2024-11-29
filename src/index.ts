@@ -1,26 +1,14 @@
 // src/index.ts
-
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { Bindings, ScreenshotOptions } from "./types";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "./config";
-import {
-  AddUrlInput,
-  addUrlSchema,
-  competitorSchema,
-  diffRequestSchema,
-  getScreenshotParamSchema,
-  getScreenshotQuerySchema,
-  historyQuerySchema,
-  notificationSchema,
-  reportRequestSchema,
-  screenshotSchema,
-  subscriptionSchema,
-  updateCompetitorSchema,
-} from "./schema";
 import { initializeServices } from "./utils/initializer";
 import { bearerAuth } from "hono/bearer-auth";
 import { encodeBase64 } from "./utils/encoding";
+import { swaggerUI } from "@hono/swagger-ui";
+import { openApiSpec } from "./openapi";
+import { Bindings } from "./types/core";
+import { ScreenshotOptions } from "./types/screenshot";
 import {
   baseStub,
   createCompetitorEndpoint,
@@ -41,9 +29,22 @@ import {
   updateCompetitorEndpoint,
   updateCompetitorURLEndpoint,
 } from "./constants";
-import { swaggerUI } from "@hono/swagger-ui";
-import { openApiSpec } from "./openapi";
+import {
+  AddUrlInput,
+  addUrlSchema,
+  competitorSchema,
+  diffRequestSchema,
+  getScreenshotParamSchema,
+  getScreenshotQuerySchema,
+  historyQuerySchema,
+  notificationSchema,
+  reportRequestSchema,
+  screenshotSchema,
+  subscriptionSchema,
+  updateCompetitorSchema,
+} from "./schema";
 
+// Initialize Hono
 const app = new Hono<{ Bindings: Bindings }>();
 
 // =======================================================

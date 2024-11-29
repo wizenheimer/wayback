@@ -1,7 +1,10 @@
 // src/service/ai.ts
-
 import OpenAI from "openai";
-import { AggregatedReport, CategoryEnriched, DiffAnalysis } from "../types";
+import {
+  AggregatedReport,
+  CategoryEnriched,
+  DiffAnalysis,
+} from "../types/diff";
 
 export class AIService {
   private readonly openai: OpenAI;

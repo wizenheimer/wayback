@@ -75,20 +75,20 @@ const main = {
   backgroundColor: "#ffffff",
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const container = {
   margin: "0 auto",
   padding: "40px 20px",
   maxWidth: "600px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const logoText = {
   textAlign: "center",
   fontSize: "24px",
   color: "#000",
   marginBottom: "40px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const title = {
   fontSize: "32px",
@@ -97,60 +97,30 @@ const title = {
   color: "#000",
   marginBottom: "12px",
   textAlign: "center",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const subtitle = {
   fontSize: "18px",
   color: "#666",
   marginBottom: "32px",
   textAlign: "center",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const messageSection = {
   marginBottom: "32px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const messageText = {
   fontSize: "16px",
   lineHeight: "1.5",
   color: "#333",
   marginBottom: "16px",
-} as React.CSSProperties;;
-
-const divider = {
-  borderTop: "1px solid #eaeaea",
-  marginTop: "24px",
-  marginBottom: "24px",
-} as React.CSSProperties;;
-
-const valueSection = {
-  marginBottom: "32px",
-} as React.CSSProperties;;
-
-const sectionTitle = {
-  fontSize: "12px",
-  fontWeight: "500",
-  color: "#666",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  marginBottom: "16px",
-} as React.CSSProperties;;
-
-const bulletList = {
-  marginBottom: "24px",
-} as React.CSSProperties;;
-
-const bulletText = {
-  fontSize: "16px",
-  color: "#333",
-  lineHeight: "1.6",
-  marginBottom: "12px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const ctaSection = {
   textAlign: "center",
   marginBottom: "32px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const ctaButton = {
   backgroundColor: "#000",
@@ -162,48 +132,48 @@ const ctaButton = {
   fontWeight: "500",
   display: "inline-block",
   marginBottom: "12px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const ctaSubtext = {
   fontSize: "14px",
   color: "#666",
   fontStyle: "italic",
   marginTop: "12px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const closingSection = {
   textAlign: "center",
   marginBottom: "32px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const closingText = {
   fontSize: "18px",
   fontWeight: "500",
   color: "#333",
   lineHeight: "1.5",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const supportSection = {
   textAlign: "center",
   marginBottom: "32px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const supportText = {
   fontSize: "14px",
   color: "#666",
   marginBottom: "8px",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const supportLink = {
   color: "#000",
   textDecoration: "none",
   fontWeight: "500",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 const footer = {
   fontSize: "12px",
   color: "#666",
   textAlign: "center",
-} as React.CSSProperties;;
+} as React.CSSProperties;
 
 export default Trial14DayEmail;

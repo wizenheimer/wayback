@@ -1,6 +1,5 @@
 // src/service/db.ts
-
-import { DiffAnalysis } from "../types";
+import { DiffAnalysis } from "../types/diff";
 
 export class DBService {
   constructor(private db: D1Database) {}

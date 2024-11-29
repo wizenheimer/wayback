@@ -8,7 +8,6 @@ import {
   Section,
   Text,
   Link,
-  Hr,
 } from "@react-email/components";
 
 interface WaitlistOnboardingProps {
@@ -99,101 +98,12 @@ const messageText = {
   marginBottom: "16px",
 } as React.CSSProperties;
 
-const ctaSection = {
-  textAlign: "center",
-  marginBottom: "32px",
-  backgroundColor: "#f8f9fa",
-  padding: "24px",
-  borderRadius: "8px",
-} as React.CSSProperties;
-
-const moveUpText = {
-  fontSize: "20px",
-  fontWeight: "600",
-  color: "#000",
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const ctaButton = {
-  backgroundColor: "#000",
-  color: "#fff",
-  padding: "16px 32px",
-  borderRadius: "6px",
-  textDecoration: "none",
-  fontSize: "16px",
-  fontWeight: "500",
-  display: "inline-block",
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const referralText = {
-  fontSize: "14px",
-  color: "#333",
-  lineHeight: "1.6",
-  marginBottom: "8px",
-} as React.CSSProperties;
-
-const referralSubtext = {
-  fontSize: "14px",
-  color: "#666",
-  fontStyle: "italic",
-} as React.CSSProperties;
-
-const divider = {
-  borderTop: "1px solid #eaeaea",
-  marginTop: "32px",
-  marginBottom: "32px",
-} as React.CSSProperties;
-
-const resourcesSection = {
-  marginBottom: "32px",
-} as React.CSSProperties;
-
-const sectionTitle = {
-  fontSize: "20px",
-  fontWeight: "600",
-  color: "#000",
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const resourcesText = {
-  fontSize: "16px",
-  color: "#333",
-  marginBottom: "16px",
-  lineHeight: "1.6",
-} as React.CSSProperties;
-
-const bulletList = {
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const bulletText = {
-  fontSize: "14px",
-  color: "#333",
-  lineHeight: "1.6",
-  marginBottom: "8px",
-} as React.CSSProperties;
-
-const resourcesFooter = {
-  fontSize: "14px",
-  color: "#666",
-  fontStyle: "italic",
-  marginTop: "16px",
-} as React.CSSProperties;
-
 const escapeSection = {
   textAlign: "center",
   marginBottom: "32px",
   backgroundColor: "#f8f9fa",
   padding: "24px",
   borderRadius: "8px",
-} as React.CSSProperties;
-
-const escapeTitle = {
-  fontSize: "20px",
-  fontWeight: "600",
-  color: "#000",
-  marginBottom: "16px",
 } as React.CSSProperties;
 
 const escapeText = {

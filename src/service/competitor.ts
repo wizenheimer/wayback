@@ -1,8 +1,11 @@
 // src/service/competitor.ts
-
-import { CreateCompetitorInput, UpdateCompetitorInput } from "../schema";
-import { Competitor, CompetitorUrl, CompetitorWithUrls } from "../types";
+import {
+  Competitor,
+  CompetitorUrl,
+  CompetitorWithUrls,
+} from "../types/competitor";
 import { generatePathHash } from "../utils/path";
+import { CreateCompetitorInput, UpdateCompetitorInput } from "../schema";
 
 export class CompetitorService {
   constructor(private db: D1Database) {}

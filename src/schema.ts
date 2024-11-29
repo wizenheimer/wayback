@@ -1,7 +1,7 @@
 // src/schema.ts
 
 import { z } from "zod";
-import { BlockableResources, Timezones, IpCountries } from "./types";
+import { BlockableResources, IpCountries, Timezones } from "./types/screenshot";
 
 const clipSchema = z
   .object({

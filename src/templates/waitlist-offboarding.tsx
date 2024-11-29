@@ -135,29 +135,6 @@ const messageText = {
   marginBottom: "16px",
 } as React.CSSProperties;
 
-const statsRow = {
-  display: "flex",
-  justifyContent: "center",
-  margin: "0 -10px 32px -10px",
-} as React.CSSProperties;
-
-const statsColumn = {
-  padding: "0 20px",
-  textAlign: "center",
-} as React.CSSProperties;
-
-const statLabel = {
-  fontSize: "12px",
-  color: "#666",
-  marginTop: "4px",
-} as React.CSSProperties;
-
-const statValue = {
-  fontSize: "24px",
-  fontWeight: "700",
-  color: "#000",
-} as React.CSSProperties;
-
 const divider = {
   borderTop: "1px solid #eaeaea",
   marginTop: "24px",

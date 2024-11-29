@@ -8,7 +8,6 @@ import {
   Section,
   Text,
   Link,
-  Hr,
 } from "@react-email/components";
 
 interface Trial7DayEmailProps {
@@ -118,36 +117,6 @@ const messageText = {
   lineHeight: "1.5",
   color: "#333",
   marginBottom: "16px",
-} as React.CSSProperties;
-
-const divider = {
-  borderTop: "1px solid #eaeaea",
-  marginTop: "24px",
-  marginBottom: "24px",
-} as React.CSSProperties;
-
-const valueSection = {
-  marginBottom: "32px",
-} as React.CSSProperties;
-
-const sectionTitle = {
-  fontSize: "12px",
-  fontWeight: "500",
-  color: "#666",
-  textTransform: "uppercase",
-  letterSpacing: "0.05em",
-  marginBottom: "16px",
-} as React.CSSProperties;
-
-const bulletList = {
-  marginBottom: "24px",
-} as React.CSSProperties;
-
-const bulletText = {
-  fontSize: "16px",
-  color: "#333",
-  lineHeight: "1.6",
-  marginBottom: "12px",
 } as React.CSSProperties;
 
 const ctaSection = {
