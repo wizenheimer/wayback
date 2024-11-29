@@ -143,21 +143,33 @@ const historyQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(100).optional(),
 });
 
+const categoryBaseSchema = z.object({
+  changes: z.array(z.string()),
+  urls: z.record(z.array(z.string())),
+});
+
+const categoryEnrichedSchema = categoryBaseSchema.extend({
+  summary: z.string(),
+});
+
 const reportRequestSchema = z
   .object({
     urls: z.array(z.string().url()).min(1).max(100),
-    timestamp1: z.string().length(8).regex(/^\d+$/).optional(),
-    timestamp2: z.string().length(8).regex(/^\d+$/).optional(),
+    runId1: z.string().optional(),
+    runId2: z.string().optional(),
+    weekNumber: z.string().length(2).regex(/^\d+$/).optional(),
+    competitor: z.string().min(1, "Competitor name is required"),
+    enriched: z.boolean().optional().default(false),
   })
   .refine(
     (data) => {
-      if (data.timestamp1 && data.timestamp2) {
-        return data.timestamp1 <= data.timestamp2;
+      if (data.runId1 && data.runId2) {
+        return data.runId1 <= data.runId2;
       }
       return true;
     },
     {
-      message: "timestamp1 must be earlier than or equal to timestamp2",
+      message: "runId1 must be earlier than or equal to runId2",
     }
   );
 
