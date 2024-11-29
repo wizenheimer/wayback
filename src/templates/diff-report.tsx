@@ -9,8 +9,6 @@ import {
   Text,
   Link,
   Hr,
-  Row,
-  Column,
 } from "@react-email/components";
 
 interface ChangeData {
@@ -39,7 +37,7 @@ interface DiffReportEmailProps {
 }
 
 export const DiffReportEmail = ({
-  competitor = "Acme Corporation",
+  competitor = "Competitor",
   fromDate = "01022024",
   toDate = "15032024",
   generatedAt = new Date().toISOString(),
@@ -105,7 +103,7 @@ export const DiffReportEmail = ({
             {new Date(generatedAt).toLocaleDateString()}
           </Text>
           <Text style={footer}>
-            ByrdLabs • San Francisco
+            ByrdLabs . San Francisco
           </Text>
         </Container>
       </Body>
@@ -239,34 +237,6 @@ const dateContainer = {
   color: "#666",
   marginBottom: "40px",
   textAlign: "center" as const,
-};
-
-const statsContainer = {
-  textAlign: "center" as const,
-}
-
-const statsRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  margin: "0 -10px 32px -10px",
-};
-
-const statsColumn = {
-  padding: "0 10px",
-  textAlign: "center" as const,
-  flex: "1",
-};
-
-const statLabel = {
-  fontSize: "12px",
-  color: "#666",
-  marginTop: "4px",
-};
-
-const statValue = {
-  fontSize: "24px",
-  fontWeight: "700",
-  color: "#000",
 };
 
 const divider = {

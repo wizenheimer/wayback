@@ -1,13 +1,10 @@
 // src/service/notification.ts
-
 import { Resend } from "resend";
 import {
-  EmailTemplateId,
-  EmailTemplateParameters,
   NotificationRequest,
   NotificationResults,
   NotificationServiceConfig,
-} from "../types";
+} from "../types/notification";
 import DiffReportEmail from "../templates/diff-report";
 import Trial0DayEmail from "../templates/trial-0-day";
 import Trial3DayEmail from "../templates/trial-3-days";
@@ -17,6 +14,7 @@ import SuccessfulConversionEmail from "../templates/trial-confirmation";
 import FailedConversionEmail from "../templates/trial-renewal-failure";
 import WaitlistOffboarding from "../templates/waitlist-offboarding";
 import WaitlistOnboarding from "../templates/waitlist-onboarding";
+import { EmailTemplateId, EmailTemplateParameters } from "../types/email";
 
 export class NotificationService {
   private readonly resend: Resend;

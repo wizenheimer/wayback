@@ -1,12 +1,11 @@
 // src/service/diff.ts
-
 import {
   AggregatedReport,
   DiffAnalysis,
   DiffHistoryQuery,
   DiffRequest,
   ReportRequest,
-} from "../types";
+} from "../types/diff";
 import { getWeekNumber } from "../utils/path";
 import { AIService } from "./ai";
 import { DBService } from "./db";

@@ -1,9 +1,5 @@
-import {
-  AggregatedReport,
-  CategoryBase,
-  CategoryEnriched,
-  DiffReportEmailParameters,
-} from "../types";
+import { AggregatedReport, CategoryBase, CategoryEnriched } from "../types/diff";
+import { DiffReportEmailParameters } from "../types/email";
 
 export const categorySummaries = {
   branding: {

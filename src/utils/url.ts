@@ -1,6 +1,6 @@
 // src/utils/url.ts
 
-import { ScreenshotOptions } from "../types";
+import { ScreenshotOptions } from "../types/screenshot";
 
 export const createScreenshotUrl = (
   apiKey: string,
