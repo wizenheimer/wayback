@@ -125,22 +125,33 @@ export class DiffService {
   }
 
   async generateReport(params: ReportRequest): Promise<AggregatedReport> {
-    const { urls, runId1, runId2, weekNumber = getWeekNumber() } = params;
+    const {
+      urls,
+      runId1,
+      runId2,
+      weekNumber = getWeekNumber(),
+      competitor,
+      enriched = false,
+    } = params;
 
-    // Initialize the aggregated report structure
+    // Initialize base report structure
     const aggregatedReport: AggregatedReport = {
-      branding: { changes: [], urls: {} },
-      integration: { changes: [], urls: {} },
-      pricing: { changes: [], urls: {} },
-      product: { changes: [], urls: {} },
-      positioning: { changes: [], urls: {} },
-      partnership: { changes: [], urls: {} },
+      data: {
+        branding: { changes: [], urls: {} },
+        integration: { changes: [], urls: {} },
+        pricing: { changes: [], urls: {} },
+        product: { changes: [], urls: {} },
+        positioning: { changes: [], urls: {} },
+        partnership: { changes: [], urls: {} },
+      },
       metadata: {
         generatedAt: new Date().toISOString(),
-        timeRange: {
-          from: "",
-          to: "",
+        weekNumber,
+        runRange: {
+          fromRun: runId1 || "",
+          toRun: runId2 || "",
         },
+        competitor,
         urlCount: urls.length,
         processedUrls: {
           successful: [],
@@ -154,10 +165,11 @@ export class DiffService {
           skippedCount: 0,
         },
         errors: {},
+        enriched: false,
       },
     };
 
-    // Process each URL
+    // Process URLs and collect changes
     const diffPromises = urls.map(async (url: string) => {
       try {
         const diffs = await this.diffDB.getDiffHistory({
@@ -169,88 +181,54 @@ export class DiffService {
         });
 
         if (diffs.length === 0) {
-          // No diffs found in time range
           aggregatedReport.metadata.processedUrls.skipped.push(url);
           aggregatedReport.metadata.processingStats.skippedCount++;
-          aggregatedReport.metadata.errors[url] =
-            "No diffs found in specified time range";
           return;
         }
 
         const diff = diffs[0];
-
-        // Update time range in metadata
-        if (
-          !aggregatedReport.metadata.timeRange.from ||
-          diff.timestamp1 < aggregatedReport.metadata.timeRange.from
-        ) {
-          aggregatedReport.metadata.timeRange.from = diff.timestamp1;
-        }
-        if (
-          !aggregatedReport.metadata.timeRange.to ||
-          diff.timestamp2 > aggregatedReport.metadata.timeRange.to
-        ) {
-          aggregatedReport.metadata.timeRange.to = diff.timestamp2;
-        }
-
-        // Process each category
-        const categories: (keyof DiffAnalysis)[] = [
+        const categories = [
           "branding",
           "integration",
           "pricing",
           "product",
           "positioning",
           "partnership",
-        ];
+        ] as const;
 
         categories.forEach((category) => {
           const changes = diff[`${category}_changes`];
           if (changes && changes.length > 0) {
-            // Add new unique changes to the global list
-            changes.forEach((change: string) => {
-              if (!aggregatedReport[category].changes.includes(change)) {
-                aggregatedReport[category].changes.push(change);
-              }
-
-              // Add changes to URL mapping
-              if (!aggregatedReport[category].urls[url]) {
-                aggregatedReport[category].urls[url] = [];
-              }
-              if (!aggregatedReport[category].urls[url].includes(change)) {
-                aggregatedReport[category].urls[url].push(change);
-              }
-            });
+            aggregatedReport.data[category].changes.push(...changes);
+            if (!aggregatedReport.data[category].urls[url]) {
+              aggregatedReport.data[category].urls[url] = [];
+            }
+            aggregatedReport.data[category].urls[url].push(...changes);
           }
         });
 
-        // Mark URL as successfully processed
         aggregatedReport.metadata.processedUrls.successful.push(url);
         aggregatedReport.metadata.processingStats.successCount++;
       } catch (error) {
-        // Handle individual URL processing errors
         aggregatedReport.metadata.processedUrls.failed.push(url);
         aggregatedReport.metadata.processingStats.failureCount++;
         aggregatedReport.metadata.errors[url] =
-          error instanceof Error ? error.message : "Unknown error occurred";
+          error instanceof Error ? error.message : "Unknown error";
       }
     });
 
-    // Wait for all diffs to be processed
     await Promise.all(diffPromises);
 
-    // Sort changes in each category for consistency
-    Object.keys(aggregatedReport).forEach((category) => {
-      if (category !== "metadata") {
-        aggregatedReport[
-          category as keyof Omit<AggregatedReport, "metadata">
-        ].changes.sort();
+    // Enrich with AI summaries if requested
+    if (enriched) {
+      try {
+        await this.ai.enrichReport(aggregatedReport);
+        aggregatedReport.metadata.enriched = true;
+      } catch (error) {
+        aggregatedReport.metadata.errors["enrichment"] =
+          error instanceof Error ? error.message : "Failed to enrich report";
       }
-    });
-
-    // Sort the processed URLs arrays for consistency
-    aggregatedReport.metadata.processedUrls.successful.sort();
-    aggregatedReport.metadata.processedUrls.failed.sort();
-    aggregatedReport.metadata.processedUrls.skipped.sort();
+    }
 
     return aggregatedReport;
   }

@@ -1,7 +1,7 @@
 // src/service/ai.ts
 
 import OpenAI from "openai";
-import { DiffAnalysis } from "../types";
+import { AggregatedReport, CategoryEnriched, DiffAnalysis } from "../types";
 
 export class AIService {
   private readonly openai: OpenAI;
@@ -16,7 +16,7 @@ export class AIService {
   ): Promise<DiffAnalysis> {
     try {
       const response = await this.openai.beta.chat.completions.parse({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -151,6 +151,102 @@ export class AIService {
       throw new Error("diff analysis refused");
     } catch (error) {
       console.error("Diff analysis error:", error);
+      throw error;
+    }
+  }
+
+  async enrichReport(report: AggregatedReport): Promise<AggregatedReport> {
+    try {
+      const response = await this.openai.beta.chat.completions.parse({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                type: "text",
+                text: "You're a morning brew copywriter with this personality. Voice: Sharp advisor who distills competitor moves into one liners. Style: Think Peter Thiel meets Palmer Luckey - insightful with personality. Tone: Human. Conversational. Simple words. Zero jargon. Zero corporate speak.Analyze the competitive intelligence and provide concise summaries for each category of changes.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: `Analyze this competitive intelligence report and provide summaries:\n${JSON.stringify(
+              report,
+              null,
+              2
+            )}`,
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "competitive_intelligence_summaries",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                branding: {
+                  type: "string",
+                  description: "Summary for key branding changes",
+                },
+                integration: {
+                  type: "string",
+                  description: "Summary for key integration changes",
+                },
+                pricing: {
+                  type: "string",
+                  description: "Summary for key pricing changes",
+                },
+                positioning: {
+                  type: "string",
+                  description: "Summary for key positioning changes",
+                },
+                product: {
+                  type: "string",
+                  description: "Summary for key product changes",
+                },
+                partnership: {
+                  type: "string",
+                  description: "Summary for key partnership changes",
+                },
+              },
+              required: [
+                "branding",
+                "integration",
+                "pricing",
+                "positioning",
+                "product",
+                "partnership",
+              ],
+              additionalProperties: false,
+            },
+          },
+        },
+        temperature: 0.3,
+      });
+
+      const summaries: any = response.choices[0].message.parsed;
+
+      // Enrich each category with its summary
+      const categories = [
+        "branding",
+        "integration",
+        "pricing",
+        "positioning",
+        "product",
+        "partnership",
+      ] as const;
+      categories.forEach((category) => {
+        if (report.data[category].changes.length > 0) {
+          (report.data[category] as CategoryEnriched).summary =
+            summaries[category] || "No significant changes detected.";
+        }
+      });
+
+      return report;
+    } catch (error) {
+      console.error("Report enrichment error:", error);
       throw error;
     }
   }
