@@ -23,8 +23,8 @@ const initializeServices = (c: any) => {
 
   // Initialize Diff Service
   const diffDB = new DBService(c.env.DIFF_DB);
-  const ai = new AIService(c.env.OPENAI_API_KEY);
-  const diffService = new DiffService(screenshotService, diffDB, ai);
+  const aiService = new AIService(c.env.OPENAI_API_KEY);
+  const diffService = new DiffService(screenshotService, diffDB, aiService);
 
   // Initialize Subscription Service (using same DB as competitors)
   const subscriptionService = new SubscriptionService(c.env.COMPETITOR_DB);
@@ -38,6 +38,7 @@ const initializeServices = (c: any) => {
   });
 
   return {
+    aiService,
     screenshotService,
     diffService,
     competitorService,
