@@ -65,7 +65,20 @@ const subscribeCompetitorEndpoint = `${versionStub}/competitors/:id/subscribe`;
 
 const notifyEndpoint = `${versionStub}/notify`;
 
+// ==================== Workflow ====================
+
+const workflowBase = `${versionStub}/workflows`;
+
+const workflowStatusEndpoint = `${workflowBase}/status`;
+
+const diffWorkflowEndpoint = `${workflowBase}/diff`;
+
+const reportWorkflowEndpoint = `${workflowBase}/report`;
+
 export {
+  workflowStatusEndpoint,
+  diffWorkflowEndpoint,
+  reportWorkflowEndpoint,
   subscribeCompetitorEndpoint,
   diffHistoryEndpoint,
   diffCreationEndpoint,
