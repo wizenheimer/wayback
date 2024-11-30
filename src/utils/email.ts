@@ -1,4 +1,8 @@
-import { AggregatedReport, CategoryBase, CategoryEnriched } from "../types/diff";
+import {
+  AggregatedReport,
+  CategoryBase,
+  CategoryEnriched,
+} from "../types/diff";
 import { DiffReportEmailParameters } from "../types/email";
 
 export const categorySummaries = {
@@ -136,6 +140,33 @@ export const getRandomSummary = (
   );
 };
 
+function getDateFromWeek(
+  weekNumber: number,
+  year: number = new Date().getFullYear(),
+  dayOfWeek = 1
+) {
+  // Create date object for January 1st of the given year
+  const januaryFirst = new Date(year, 0, 1);
+
+  // Get the day of week for January 1st (0 = Sunday, 1 = Monday, etc.)
+  const dayOffset = januaryFirst.getDay();
+
+  // Calculate days to add to get to the first week
+  // If January 1st is not a Monday, we need to adjust
+  const daysToAdd = (weekNumber - 1) * 7 + (dayOfWeek - 1) + dayOffset;
+
+  // Add the calculated days to January 1st
+  const resultDate = new Date(year, 0, 1 + daysToAdd);
+
+  return resultDate;
+}
+
+function getWeekNumber(date = new Date()) {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+  const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
+  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
 export const reportToEmailParams = (
   enrichedReport: AggregatedReport
 ): DiffReportEmailParameters => {
@@ -155,13 +186,43 @@ export const reportToEmailParams = (
     };
   };
 
+  const weekNumber =
+    Number.parseInt(enrichedReport.metadata.weekNumber) || getWeekNumber();
+  const fromDateOffset =
+    Math.max(Number.parseInt(enrichedReport.metadata.runRange.fromRun), 7) || 0;
+  const toDateOffset =
+    Math.min(Number.parseInt(enrichedReport.metadata.runRange.toRun), 7) || 7;
+
+  console.log("fromDateOffset", fromDateOffset);
+  console.log("toDateOffset", toDateOffset);
+  console.log("weekNumber", weekNumber);
+  // Have date without time
+  const fromDate = getDateFromWeek(weekNumber, 2024, fromDateOffset)
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .split("/")
+    .join("");
+
+  const toDate = getDateFromWeek(weekNumber, 2024, toDateOffset)
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+    .split("/")
+    .join("");
+
+  console.log("fromDate", fromDate);
+  console.log("toDate", toDate);
+
   return {
     kind: "diff-report",
     competitor: enrichedReport.metadata.competitor,
-    fromDate: enrichedReport.metadata.runRange.fromRun
-      .split("_")[1]
-      .slice(0, 8),
-    toDate: enrichedReport.metadata.runRange.toRun.split("_")[1].slice(0, 8),
+    fromDate: fromDate,
+    toDate: toDate,
     data: {
       branding: ensureSummary(enrichedReport.data.branding, "branding"),
       integration: ensureSummary(
