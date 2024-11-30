@@ -1,0 +1,1165 @@
+{
+	"info": {
+		"_postman_id": "be05fe8d-87d5-491b-80b8-563e47c4d18c",
+		"name": "Wayback",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38905328"
+	},
+	"item": [
+		{
+			"name": "Screenshot Service",
+			"item": [
+				{
+					"name": "Capture Screenshot",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://www.commonroom.io/resources/playbooks\",\n    \"runId\": \"7\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/screenshots",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"screenshots"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Screenshot Image",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/screenshots/screenshot/{{screenshotRef}}/{{weekNumber}}/{{runID}}",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"screenshots",
+								"screenshot",
+								"{{screenshotRef}}",
+								"{{weekNumber}}",
+								"{{runID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Screenshot Content",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/screenshots/content/{{screenshotRef}}/{{weekNumber}}/{{runID}}",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"screenshots",
+								"content",
+								"{{screenshotRef}}",
+								"{{weekNumber}}",
+								"{{runID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Diffing Service",
+			"item": [
+				{
+					"name": "Create Diff",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://commonroom.io/\",\n    \"runId1\": \"1\",\n    \"runId2\": \"7\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/diff",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"diff"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Query Diff",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/diff/history?url=https://commonroom.io/",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"diff",
+								"history"
+							],
+							"query": [
+								{
+									"key": "url",
+									"value": "https://commonroom.io/"
+								},
+								{
+									"key": "fromRunId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "toRunId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "weekNumber",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Report Diff",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"urls\": [\"https://commonroom.io/\"],\n    \"runId1\": \"1\",\n    \"runId2\": \"2\",\n    \"weekNumber\": \"48\",\n    \"competitor\": \"Common Room\",\n    \"enriched\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/diff/report",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"diff",
+								"report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Competitor Service",
+			"item": [
+				{
+					"name": "Competitor Management",
+					"item": [
+						{
+							"name": "Create New Competitor",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Common Room\",\n    \"domain\": \"https://commonroom.io/\",\n    \"urls\": [\n        \"https://www.commonroom.io/solutions/open-source/\",\n        \"https://www.commonroom.io/solutions/developer-relations/\",\n        \"https://www.commonroom.io/solutions/account-based-sales/\",\n        \"https://www.commonroom.io/solutions/community/\",\n        \"https://www.commonroom.io/solutions/web-visitor-identification/\",\n        \"https://www.commonroom.io/solutions/product-led-sales/\",\n        \"https://www.commonroom.io/solutions/job-change/\",\n        \"https://www.commonroom.io/product/signals/\",\n        \"https://www.commonroom.io/solutions/revenue-operations/\",\n        \"https://www.commonroom.io/solutions/marketing/\",\n        \"https://www.commonroom.io/solutions/sales/\",\n        \"https://www.commonroom.io/product/automation/\",\n        \"https://www.commonroom.io/product/ai/\",\n        \"https://www.commonroom.io/solutions/prospector/\",\n        \"https://www.commonroom.io/pricing/integrations/\",\n        \"https://www.commonroom.io/pricing/\",\n        \"https://www.commonroom.io/blog/\",\n        \"https://www.commonroom.io/product/person-360/\",\n        \"https://www.commonroom.io/community/\",\n        \"https://www.commonroom.io/resources/signals/\",\n        \"https://www.commonroom.io/resources/videos\",\n        \"https://www.commonroom.io/resources/customers\",\n        \"https://www.commonroom.io/solutions/chrome-extension/\",\n        \"https://www.commonroom.io/resources/playbooks\",\n        \"https://www.commonroom.io/podcast/\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update competitor by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Common Room\",\n    \"domain\": \"https://commonroom.io/\",\n    \"urls\": [\n        \"https://www.commonroom.io/solutions/open-source/\",\n        \"https://www.commonroom.io/solutions/developer-relations/\",\n        \"https://www.commonroom.io/solutions/account-based-sales/\",\n        \"https://www.commonroom.io/solutions/community/\",\n        \"https://www.commonroom.io/solutions/web-visitor-identification/\",\n        \"https://www.commonroom.io/solutions/product-led-sales/\",\n        \"https://www.commonroom.io/solutions/job-change/\",\n        \"https://www.commonroom.io/product/signals/\",\n        \"https://www.commonroom.io/solutions/revenue-operations/\",\n        \"https://www.commonroom.io/solutions/marketing/\",\n        \"https://www.commonroom.io/solutions/sales/\",\n        \"https://www.commonroom.io/product/automation/\",\n        \"https://www.commonroom.io/product/ai/\",\n        \"https://www.commonroom.io/solutions/prospector/\",\n        \"https://www.commonroom.io/pricing/integrations/\",\n        \"https://www.commonroom.io/pricing/\",\n        \"https://www.commonroom.io/blog/\",\n        \"https://www.commonroom.io/product/person-360/\",\n        \"https://www.commonroom.io/community/\",\n        \"https://www.commonroom.io/resources/signals/\",\n        \"https://www.commonroom.io/resources/videos\",\n        \"https://www.commonroom.io/resources/customers\",\n        \"https://www.commonroom.io/solutions/chrome-extension/\",\n        \"https://www.commonroom.io/resources/playbooks\",\n        \"https://www.commonroom.io/podcast/\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/id/{{competitorID}}",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"id",
+										"{{competitorID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Competitor by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/id/{{competitorID}}",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"id",
+										"{{competitorID}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Competitors",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"name\": \"Common Room\",\n    \"domain\": \"https://commonroom.io/\",\n    \"urls\": [\"https://commonroom.io/\"]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Find competitor by ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/id/{{competitorID}}",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"id",
+										"{{competitorID}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "URL Management",
+					"item": [
+						{
+							"name": "Track a new URL for Competitor",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"url\": \"https://www.commonroom.io/product/signals/\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/id/{{competitorID}}/url",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"id",
+										"{{competitorID}}",
+										"url"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Remove an existing URL from Competitor",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/id/{{competitorID}}/url?url=https://www.commonroom.io/product/signals/",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"id",
+										"{{competitorID}}",
+										"url"
+									],
+									"query": [
+										{
+											"key": "url",
+											"value": "https://www.commonroom.io/product/signals/"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List All Competitor URLs",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/url",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"url"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "offset",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "hash",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Subscription Management",
+					"item": [
+						{
+							"name": "Subscribe to a Competitor ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"xnayankumar@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/{{competitorID}}/subscribe",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"{{competitorID}}",
+										"subscribe"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Unsubscribe from a Competitor ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"xnayankumar@gmail.com\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/{{competitorID}}/subscribe",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"{{competitorID}}",
+										"subscribe"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get all Subscribers for Competitor ID",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{origin}}/{{baseStub}}/{{version}}/competitors/{{competitorID}}/subscribe",
+									"host": [
+										"{{origin}}"
+									],
+									"path": [
+										"{{baseStub}}",
+										"{{version}}",
+										"competitors",
+										"{{competitorID}}",
+										"subscribe"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Notification Service",
+			"item": [
+				{
+					"name": "Waitlist Onboarding",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"waitlist-onboarding\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"waitlist-onboarding\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Waitlist Offboarding",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"waitlist-offboarding\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"waitlist-offboarding\",\n        \"inviteLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trial 14 Day",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"trial-14-day\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"trial-14-day\",\n        \"upgradeLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trial 7 Day",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"trial-7-day\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"trial-7-day\",\n        \"upgradeLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trial 3 Day",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"trial-3-day\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"trial-3-day\",\n        \"upgradeLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trial 0 Day",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"trial-0-day\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"trial-0-day\",\n        \"upgradeLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Failure Conversion",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"failed-conversion\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"failed-conversion\",\n        \"upgradeLink\": \"https://byrdhq.com/dashboard\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Successful Conversion",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"successful-conversion\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"successful-conversion\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Diff Report",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"templateId\": \"diff-report\",\n    \"emails\": [\"xnayankumar@gmail.com\"],\n    \"emailTemplateParams\": {\n        \"kind\": \"diff-report\",\n        \"competitor\": \"Byrd\",\n        \"fromDate\": \"01022024\",\n        \"toDate\": \"15032024\",\n        \"data\": {\n            \"branding\": {\n    \"summary\": \"Refreshed logo design and updated website typography. Seems like they're going for a more modern look.\",\n    \"changes\": [\n      \"Refreshed logo design with new monochrome palette\",\n      \"Updated website typography to SF Pro Display\",\n      \"Changed primary brand color from blue (#1DA1F2) to purple (#5865F2)\",\n    ],\n    \"urls\": {\n      \"https://competitor.com\": [\n        \"Refreshed logo design with new monochrome palette\",\n      ],\n      \"https://competitor.com/brand\": [\n        \"Updated website typography to SF Pro Display\",\n        \"Changed primary brand color from blue (#1DA1F2) to purple (#5865F2)\",\n      ]\n    }\n  },\n  \"integration\": {\n    \"summary\": \"Added Salesforce integration, deprecated XML API endpoints. SDKs for Python and Ruby are now in beta.\",\n    \"changes\": [\n      \"Added native Salesforce integration with real-time sync\",\n      \"Deprecated XML API endpoints, migration deadline Q3 2024\",\n      \"Released Python and Ruby SDKs in beta\",\n    ],\n    \"urls\": {\n      \"https://competitor.com/integrations\": [\n        \"Added native Salesforce integration with real-time sync\",\n      ],\n      \"https://competitor.com/developers\": [\n        \"Deprecated XML API endpoints, migration deadline Q3 2024\",\n        \"Released Python and Ruby SDKs in beta\",\n      ]\n    }\n  },\n  \"pricing\": {\n    \"summary\": \"Increased enterprise tier pricing by 15%. Introduced new 'Growth' tier at $499/month. Added usage-based pricing option for API calls.\",\n    \"changes\": [\n      \"Increased enterprise tier pricing by 15% ($1000 to $1150/month)\",\n      \"Introduced new /'Growth'/ tier at $499/month\",\n      \"Added usage-based pricing option for API calls\",\n    ],\n    \"urls\": {\n      \"https://competitor.com/pricing\": [\n        \"Increased enterprise tier pricing by 15% ($1000 to $1150/month)\",\n        \"Introduced new 'Growth' tier at $499/month\",\n        \"Added usage-based pricing option for API calls\"\n      ]\n    }\n  },\n  \"positioning\": {\n    \"summary\": \"Shifted focus from SMBs to enterprise customers. New emphasis on AI and automation capabilities.\",\n    \"changes\": [\n      \"Shifted focus from SMBs to enterprise customers\",\n      \"New emphasis on AI and automation capabilities\",\n    ],\n    \"urls\": {\n      \"https://competitor.com\": [\n        \"Shifted focus from SMBs to enterprise customers\",\n        \"New emphasis on AI and automation capabilities\",\n      ]\n    }\n  },\n  \"product\": {\n    \"summary\": \"Launched AI-powered content suggestions feature. Redesigned analytics dashboard with real-time metrics.\",\n    \"changes\": [\n      \"Launched AI-powered content suggestions feature\",\n      \"Redesigned analytics dashboard with real-time metrics\",\n    ],\n    \"urls\": {\n      \"https://competitor.com/features\": [\n        \"Launched AI-powered content suggestions feature\",\n        \"Redesigned analytics dashboard with real-time metrics\",\n      ]\n    }\n  },\n  \"partnership\": {\n    \"summary\": \"Strategic partnership announced with Microsoft Azure. Joined Salesforce ISV Partner Program.\",\n    \"changes\": [\n      \"Strategic partnership announced with Microsoft Azure\",\n      \"Joined Salesforce ISV Partner Program\",\n    ],\n    \"urls\": {\n      \"https://competitor.com/partners\": [\n        \"Strategic partnership announced with Microsoft Azure\",\n        \"Joined Salesforce ISV Partner Program\",\n      ]\n    }\n  }\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/notify",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"notify"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Workflow Service",
+			"item": [
+				{
+					"name": "Trigger Diff Workflow",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://commonroom.io/\",\n    \"runId\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/workflows/diff",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"workflows",
+								"diff"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trigger Reporting Workflow",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"url\": \"https://commonroom.io/\",\n    \"runId\": \"1\",\n    \"weekNumber\": 48 // optional\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{origin}}/{{baseStub}}/{{version}}/workflows/report",
+							"host": [
+								"{{origin}}"
+							],
+							"path": [
+								"{{baseStub}}",
+								"{{version}}",
+								"workflows",
+								"report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "AWcBYRq2z3E_3w"
+		},
+		{
+			"key": "origin",
+			"value": "http://localhost:8787"
+		},
+		{
+			"key": "screenshotRef",
+			"value": "9e14d2bf3cc62bba7788ae5b0e76f63d"
+		},
+		{
+			"key": "ddmmyyyy",
+			"value": "24112024"
+		},
+		{
+			"key": "baseStub",
+			"value": "api"
+		},
+		{
+			"key": "version",
+			"value": "v1"
+		},
+		{
+			"key": "competitorID",
+			"value": "1"
+		},
+		{
+			"key": "weekNumber",
+			"value": "49"
+		},
+		{
+			"key": "runID",
+			"value": "7"
+		}
+	]
+}

@@ -8,74 +8,85 @@ const versionStub = `${baseStub}/v1`;
 
 // ==================== Screenshots ====================
 
-// Get the content of a screenshot
-const screenshotContentQueryEndpoint = `${versionStub}/content/:hash/:weekNumber/:runId`;
-
-// Get the image of a screenshot
-const screenshotImageQueryEndpoint = `${versionStub}/screenshot/:hash/:weekNumber/:runId`;
+const screenshotBaseEndpoint = `${versionStub}/screenshots`;
 
 // Create a new screenshot
-const screenshotCreationEndpoint = `${versionStub}/screenshot`;
+const screenshotCreationEndpoint = ``;
+
+// Get the content of a screenshot
+const screenshotContentQueryEndpoint = `/content/:hash/:weekNumber/:runId`;
+
+// Get the image of a screenshot
+const screenshotImageQueryEndpoint = `/screenshot/:hash/:weekNumber/:runId`;
 
 // ==================== Diff ====================
 
+const diffBaseEndpoint = `${versionStub}/diff`;
+
 // Get the history of a diff
-const diffHistoryEndpoint = `${versionStub}/diff/history`;
+const diffHistoryEndpoint = `/history`;
 
 // Create a new diff
-const diffCreationEndpoint = `${versionStub}/diff/create`;
-
-// ==================== Reports ====================
+const diffCreationEndpoint = ``;
 
 // Create a new report
-const reportCreationEndpoint = `${versionStub}/report`;
+const reportCreationEndpoint = `/report`;
 
 // ==================== Competitors Aggregate ====================
 
+const competitorsBaseEndpoint = `${versionStub}/competitors`;
+
 // Create a new competitor
-const createCompetitorEndpoint = `${versionStub}/competitors`;
+const createCompetitorEndpoint = ``;
 
 // List all competitors
-const listCompetitorsEndpoint = `${versionStub}/competitors`;
+const listCompetitorsEndpoint = ``;
 
 // List competitor URLs with pagination and optional domain hash filter
-const listCompetitorsURLs = `${versionStub}/competitors/url`;
+const listCompetitorsURLs = `/url`;
 
 // List competitor URLs by hash
-const listCompetitorsbyHash = `${versionStub}/competitors/hash/:hash`;
+const listCompetitorsbyHash = `/hash/:hash`;
 
 // ==================== Competitors Individual ====================
 
 // Update any property in an existing competitor
-const updateCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
+const updateCompetitorEndpoint = `/id/:id`;
 
 // Update the URL of a competitor
-const updateCompetitorURLEndpoint = `${versionStub}/competitors/id/:id/url`;
+const updateCompetitorURLEndpoint = `/id/:id/url`;
 
 // Delete entire competitor info including URLs
-const deleteCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
+const deleteCompetitorEndpoint = `/id/:id`;
 
 // Get competitor info
-const getCompetitorEndpoint = `${versionStub}/competitors/id/:id`;
+const getCompetitorEndpoint = `/id/:id`;
 
 // Subscribe to competitor updates
-const subscribeCompetitorEndpoint = `${versionStub}/competitors/:id/subscribe`;
+const subscribeCompetitorEndpoint = `/:id/subscribe`;
 
 // ==================== Notification ====================
 
-const notifyEndpoint = `${versionStub}/notify`;
+const notificationBaseEndpoint = `${versionStub}/notifications`;
+
+const notifyEndpoint = ``;
 
 // ==================== Workflow ====================
 
-const workflowBase = `${versionStub}/workflows`;
+const workflowBaseEndpoint = `${versionStub}/workflows`;
 
-const workflowStatusEndpoint = `${workflowBase}/status`;
+const workflowStatusEndpoint = `/status`;
 
-const diffWorkflowEndpoint = `${workflowBase}/diff`;
+const diffWorkflowEndpoint = `/diff`;
 
-const reportWorkflowEndpoint = `${workflowBase}/report`;
+const reportWorkflowEndpoint = `/report`;
 
 export {
+  workflowBaseEndpoint,
+  screenshotBaseEndpoint,
+  diffBaseEndpoint,
+  competitorsBaseEndpoint,
+  notificationBaseEndpoint,
   workflowStatusEndpoint,
   diffWorkflowEndpoint,
   reportWorkflowEndpoint,
