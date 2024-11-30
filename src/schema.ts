@@ -345,6 +345,35 @@ const subscriptionSchema = z.object({
   email: z.string().email("Invalid email format"),
 });
 
+// ---- workflow schemas ----
+
+// Create validation schema for the request
+const screenshotDiffWorkflowSchema = z.object({
+  url: z.string().url("Invalid URL provided"),
+  runId: z.enum(["1", "7"], {
+    required_error: "runId must be either '1' or '7'",
+    invalid_type_error: "runId must be a string of either '1' or '7'",
+  }),
+  weekNumber: z
+    .string()
+    .regex(/^\d{2}$/, "Week number must be a two-digit string")
+    .optional(),
+});
+
+const competitorReportWorkflowSchema = z.object({
+  competitorId: z.number().int().positive(),
+  runId1: z.string().min(1),
+  runId2: z.string().min(1),
+  weekNumber: z
+    .string()
+    .regex(/^\d{2}$/, "Week number must be a two-digit string"),
+});
+
+const workflowStatusQuerySchema = z.object({
+  id: z.string(),
+  workflowType: z.enum(["diff", "report"]).optional().default("diff"),
+});
+
 export {
   getScreenshotSchema,
   getScreenshotParamSchema,
@@ -358,4 +387,7 @@ export {
   UpdateCompetitorInput,
   AddUrlInput,
   addUrlSchema,
+  competitorReportWorkflowSchema,
+  screenshotDiffWorkflowSchema,
+  workflowStatusQuerySchema,
 };

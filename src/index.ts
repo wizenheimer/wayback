@@ -10,11 +10,17 @@ import { openApiSpec } from "./openapi";
 import { Bindings } from "./types/core";
 import { ScreenshotOptions } from "./types/screenshot";
 import {
+  WorkflowEntrypoint,
+  WorkflowStep,
+  WorkflowEvent,
+} from "cloudflare:workers";
+import {
   baseStub,
   createCompetitorEndpoint,
   deleteCompetitorEndpoint,
   diffCreationEndpoint,
   diffHistoryEndpoint,
+  diffWorkflowEndpoint,
   docsStub,
   getCompetitorEndpoint,
   listCompetitorsbyHash,
@@ -22,16 +28,19 @@ import {
   listCompetitorsURLs,
   notifyEndpoint,
   reportCreationEndpoint,
+  reportWorkflowEndpoint,
   screenshotContentQueryEndpoint,
   screenshotCreationEndpoint,
   screenshotImageQueryEndpoint,
   subscribeCompetitorEndpoint,
   updateCompetitorEndpoint,
   updateCompetitorURLEndpoint,
+  workflowStatusEndpoint,
 } from "./constants";
 import {
   AddUrlInput,
   addUrlSchema,
+  competitorReportWorkflowSchema,
   competitorSchema,
   diffRequestSchema,
   getScreenshotParamSchema,
@@ -39,10 +48,26 @@ import {
   historyQuerySchema,
   notificationSchema,
   reportRequestSchema,
+  screenshotDiffWorkflowSchema,
   screenshotSchema,
   subscriptionSchema,
   updateCompetitorSchema,
+  workflowStatusQuerySchema,
 } from "./schema";
+import { NonRetryableError } from "cloudflare:workflows";
+import { StorageService } from "./service/storage";
+import { ScreenshotService } from "./service/screenshot";
+import { DBService } from "./service/db";
+import { AIService } from "./service/ai";
+import { DiffService } from "./service/diff";
+import { getWeekNumber } from "./utils/path";
+import { CompetitorService } from "./service/competitor";
+import { SubscriptionService } from "./service/subscription";
+import { NotificationService } from "./service/notification";
+import { reportToEmailParams } from "./utils/email";
+import { DiffAnalysis } from "./types/diff";
+import { CompetitorReportWorkflow } from "./workflow/report";
+import { ScreenshotDiffWorkflow } from "./workflow/diff";
 
 // Initialize Hono
 const app = new Hono<{ Bindings: Bindings }>();
@@ -892,4 +917,145 @@ app.get(subscribeCompetitorEndpoint, async (c) => {
   }
 });
 
+// =======================================================
+//                Workflow Service Endpoints
+// =======================================================
+app.post(
+  diffWorkflowEndpoint,
+  zValidator("json", screenshotDiffWorkflowSchema),
+  async (c) => {
+    try {
+      const { url, runId, weekNumber: requestedWeek } = await c.req.json();
+
+      // Use provided week number or get current week
+      const weekNumber = requestedWeek || getWeekNumber();
+
+      // Create workflow instance
+      const instance = await c.env.SCREENSHOT_DIFF_WORKFLOW.create({
+        params: {
+          url,
+          runId,
+          weekNumber,
+        },
+      });
+
+      return c.json({
+        status: "success",
+        data: {
+          workflowId: instance.id,
+          url,
+          runId,
+          weekNumber,
+          status: await instance.status(),
+        },
+      });
+    } catch (error) {
+      console.error("Workflow creation error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to create workflow",
+        },
+        500
+      );
+    }
+  }
+);
+
+app.post(
+  reportWorkflowEndpoint,
+  zValidator("json", competitorReportWorkflowSchema),
+  async (c) => {
+    try {
+      const input = await c.req.json();
+
+      // Create workflow instance
+      const instance = await c.env.COMPETITOR_REPORT_WORKFLOW.create({
+        params: input,
+      });
+
+      return c.json({
+        status: "success",
+        data: {
+          workflowId: instance.id,
+          input,
+          status: await instance.status(),
+        },
+      });
+    } catch (error) {
+      console.error("Workflow creation error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to create workflow",
+        },
+        500
+      );
+    }
+  }
+);
+
+app.get(
+  workflowStatusEndpoint,
+  zValidator("query", workflowStatusQuerySchema),
+  async (c) => {
+    const { id, workflowType } = c.req.valid("query");
+
+    try {
+      if (workflowType === "diff") {
+        const instance = await c.env.SCREENSHOT_DIFF_WORKFLOW.get(id);
+        const status = await instance.status();
+
+        return c.json({
+          status: "success",
+          data: {
+            workflowId: id,
+            type: "screenshot",
+            status: {
+              state: status.status,
+              error: status.error,
+              output: status.output,
+            },
+          },
+        });
+      } else {
+        const instance = await c.env.COMPETITOR_REPORT_WORKFLOW.get(id);
+        const status = await instance.status();
+
+        return c.json({
+          status: "success",
+          data: {
+            workflowId: id,
+            type: "competitor",
+            status: {
+              state: status.status,
+              error: status.error,
+              output: status.output,
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Workflow status error:", error);
+      return c.json(
+        {
+          status: "error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch workflow status",
+        },
+        500
+      );
+    }
+  }
+);
+
 export default app;
+export { ScreenshotDiffWorkflow, CompetitorReportWorkflow };

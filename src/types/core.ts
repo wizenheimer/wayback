@@ -17,4 +17,8 @@ export type Bindings = {
   // Notification Service bindings
   RESEND_API_KEY: string;
   FROM_EMAIL: string;
+
+  // Workflow Bindings
+  SCREENSHOT_DIFF_WORKFLOW: Workflow;
+  COMPETITOR_REPORT_WORKFLOW: Workflow;
 };

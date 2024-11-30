@@ -15,6 +15,7 @@ import FailedConversionEmail from "../templates/trial-renewal-failure";
 import WaitlistOffboarding from "../templates/waitlist-offboarding";
 import WaitlistOnboarding from "../templates/waitlist-onboarding";
 import { EmailTemplateId, EmailTemplateParameters } from "../types/email";
+import { getWeekNumber } from "../utils/path";
 
 export class NotificationService {
   private readonly resend: Resend;
@@ -52,9 +53,11 @@ export class NotificationService {
   }
 
   private getEmailSubject(params: EmailTemplateParameters): string {
+    const weekNumber = getWeekNumber();
+
     switch (params.kind) {
       case "diff-report":
-        return `Changes Detected at ${params.competitor}`;
+        return `${params.competitor} Weekly Roundup #${weekNumber}`;
       case "trial-0-day":
         return "Your Competitor's Favorite Day is Tomorrow";
       case "trial-3-day":

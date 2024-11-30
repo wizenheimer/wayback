@@ -47,12 +47,13 @@ export class DiffService {
     ]);
 
     if (!content1Obj || !content2Obj) {
-      if (!content1Obj) {
-        throw new Error("First content version not found");
+      if (!content1Obj && !content2Obj) {
+        throw new Error("No content versions found");
       } else if (!content2Obj) {
         throw new Error("Second content version not found");
+      } else if (!content1Obj) {
+        throw new Error("First content version not found");
       }
-      throw new Error("Both content versions not found");
     }
 
     // Get text content and analyze differences
@@ -112,10 +113,10 @@ export class DiffService {
       results,
       metadata: {
         url,
-        weekNumber: weekNumber || "all",
+        weekNumber: weekNumber,
         dateRange: {
-          fromRun: fromRunId || "beginning",
-          toRun: toRunId || "present",
+          fromRun: fromRunId || 0,
+          toRun: toRunId || 7,
         },
         count: results.length,
         limit,

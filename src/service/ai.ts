@@ -26,13 +26,13 @@ export class AIService {
             content: [
               {
                 type: "text",
-                text: "Analyze the content for changes across branding, integration, pricing, product, positioning, and partnership categories.\n# Process\n1. Review content for changes in:\n1.1 Branding: Visual identity, logos, website design, brand assets\n1.2 Integration: New/removed integrations, integration updates\n1.3 Pricing: Costs, tiers, promotional offers\n1.4 Product: Features, updates, removals, modifications\n1.5 Positioning: Market messaging, target audience, value proposition\n1.6 Partnerships: New/terminated partnerships, program changes\n2. For each change identified:\n2.1 Document the specific change with clear description\n2.2 For changes found:\n2.2.1 Start with action verbs or clear transition phrases\n2.2.2 List each change as a complete, detailed statement\n2.2.3 Include relevant context (numbers, timeframes, features)\n2.2.4 Separate related but distinct changes into individual items\n2.2.5 Structure complex changes into bullet points when needed",
+                text: "Analyze the content for changes across branding, integration, pricing, product, positioning, and partnership categories.\n# Process\n1. Review content for changes in:\n1.1 Branding: Changes in Visual identity, logos, website design, brand assets\n1.2 Integration: New/removed integrations, integration updates\n1.3 Pricing: Changes in Costs, tiers, promotional offers\n1.4 Product: Changes in Features, updates, removals, modifications\n1.5 Positioning: Changes in Market positioning, messaging, target audience, value proposition\n1.6 Partnerships: New/terminated partnerships, program changes\n2. For each change identified:\n2.1 Document the specific change with clear description\n2.2 For changes found:\n2.2.1 Start with action verbs or clear transition phrases\n2.2.2 List each change as a complete, detailed statement\n2.2.3 Include relevant context (numbers, timeframes, features)\n2.2.4 Separate related but distinct changes into individual items\n2.2.5 Structure complex changes into bullet points when needed\n2.3 In case no significant changes, DONOT hallucinate or invent changes",
               },
             ],
           },
           {
             role: "user",
-            content: `Compare these two versions of content and identify changes:\n\nVersion 1:\n${content1}\n\nVersion 2:\n${content2}`,
+            content: `Compare these two versions of webpage content and identify changes:\n\nVersion 1:\n${content1}\n\nVersion 2:\n${content2}`,
           },
         ],
         response_format: {
