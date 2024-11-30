@@ -132,3 +132,7 @@ class_name = "ScreenshotDiffWorkflow"
 name = "competitor-report-workflow"
 binding = "COMPETITOR_REPORT_WORKFLOW"
 class_name = "CompetitorReportWorkflow"
+
+# Trigger binding - Screenshot Diff
+[triggers]
+crons = ["0 0 * * 0", "0 0 * * 6", "0 14 * * 1"]

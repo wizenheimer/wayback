@@ -21,6 +21,7 @@ import notificationServiceRouter from "./routes/notification";
 import competitorServiceRouter from "./routes/competitor";
 import diffServiceRouter from "./routes/diff";
 import subscriptionServiceRouter from "./routes/subscription";
+import { getWeekNumber } from "./utils/path";
 
 // =======================================================
 //              Initialize Hono
@@ -64,6 +65,58 @@ app.route(workflowBaseEndpoint, workflowServiceRouter);
 
 export default {
   fetch: app.fetch,
+  async scheduled(
+    controller: ScheduledController,
+    env: Bindings,
+    ctx: ExecutionContext
+  ) {
+    let workflowEvent;
+    switch (controller.cron) {
+      case "0 0 * * 0":
+        // Day: Sunday
+        // Trigger the screenshot diff workflow with runID 1
+        console.log("Triggering screenshot diff workflow with runID 1");
+        workflowEvent = env.SCREENSHOT_DIFF_WORKFLOW.create({
+          params: {
+            url: "https://commonroom.io",
+            runId: 1,
+          },
+        });
+
+      case "0 0 * * 6":
+        // Day: Saturday
+        // Trigger the screenshot diff workflow with runID 7
+        console.log("Triggering screenshot diff workflow with runID 7");
+        workflowEvent = env.SCREENSHOT_DIFF_WORKFLOW.create({
+          params: {
+            url: "https://commonroom.io",
+            runId: 7,
+          },
+        });
+
+      case "0 14 * * 1":
+        // Day: Monday
+        // US East: 9:00 AM EST (start of week)
+        // US West: 6:00 AM PST (early morning)
+        // UK: 2:00 PM GMT (afternoon)
+        // Europe: 3:00 PM CET (afternoon)
+        // India: 7:30 PM IST (evening)
+        // China/Singapore: 10:00 PM CST/SGT (night)
+        console.log("Triggering competitor report workflow");
+        const weekNumber = String(
+          getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
+        );
+        workflowEvent = env.COMPETITOR_REPORT_WORKFLOW.create({
+          params: {
+            competitorID: 1,
+            runId1: 1,
+            runId2: 7,
+            weekNumber: weekNumber,
+          },
+        });
+    }
+    ctx.waitUntil(workflowEvent!);
+  },
 };
 
 export { ScreenshotDiffWorkflow, CompetitorReportWorkflow };
