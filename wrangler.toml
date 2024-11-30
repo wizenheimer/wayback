@@ -120,3 +120,15 @@ binding = "archive"
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+
+# Workflow binding - Screenshot Diff
+[[workflows]]
+name = "screenshot-diff-workflow"
+binding = "SCREENSHOT_DIFF_WORKFLOW"
+class_name = "ScreenshotDiffWorkflow"
+
+# Workflow binding - Competitor Report
+[[workflows]]
+name = "competitor-report-workflow"
+binding = "COMPETITOR_REPORT_WORKFLOW"
+class_name = "CompetitorReportWorkflow"
