@@ -27,7 +27,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
     const { competitorId, runId1, runId2, weekNumber } = event.payload;
 
     // Step 1: Get competitor details and subscribers
-    const { competitor, subscribers } = await step.do(
+    const { competitor } = await step.do(
       "fetch-competitor-details",
       {
         retries: {
@@ -38,8 +38,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
         timeout: "30 seconds",
       },
       async () => {
-        const { competitorService, subscriptionService } =
-          this.initializeServices();
+        const { competitorService } = this.initializeServices();
 
         // Get competitor details
         const competitor = await competitorService.getCompetitor(competitorId);
@@ -49,17 +48,35 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
           );
         }
 
+        return { competitor };
+      }
+    );
+
+    // Step 2: Get subscribers for the competitor
+    const { subscribers } = await step.do(
+      "fetch-subscriber-details",
+      {
+        retries: {
+          limit: 3,
+          delay: "10 seconds",
+          backoff: "exponential",
+        },
+        timeout: "30 seconds",
+      },
+      async () => {
+        const { subscriptionService } = this.initializeServices();
+
         // Get subscriber emails
         const subscribers =
           await subscriptionService.getSubscribersByCompetitor(competitorId);
 
-        return { competitor, subscribers };
+        return { subscribers };
       }
     );
 
-    // Step 2: Generate report for all URLs
-    const report = await step.do(
-      "generate-report",
+    // Step 3: Generate report for all URLs
+    const rawReport = await step.do(
+      "fetch-report",
       {
         retries: {
           limit: 3,
@@ -77,14 +94,34 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
           runId2,
           weekNumber,
           competitor: competitor.name,
-          enriched: true, // Enable AI summaries
+          enriched: false, // Enable AI summaries
         });
 
         return report;
       }
     );
 
-    // Step 3: Send notifications to all subscribers
+    // Step 4: Enrich report with AI summaries
+    const enrichedReport = await step.do(
+      "enrich-report",
+      {
+        retries: {
+          limit: 3,
+          delay: "30 seconds",
+          backoff: "exponential",
+        },
+        timeout: "5 minutes",
+      },
+      async () => {
+        const { aiService } = this.initializeServices();
+
+        const enrichedReport = await aiService.enrichReport(rawReport);
+
+        return enrichedReport;
+      }
+    );
+
+    // Step 5: Send notifications to all subscribers
     if (subscribers.length > 0) {
       const notificationResults = await step.do(
         "send-notifications",
@@ -98,7 +135,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
         },
         async () => {
           const { notificationService } = this.initializeServices();
-          const emailReport = reportToEmailParams(report);
+          const emailReport = reportToEmailParams(enrichedReport);
 
           const results = await notificationService.sendNotification({
             templateId: "diff-report",
@@ -113,7 +150,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
       return {
         status: "success",
         competitor,
-        report,
+        enrichedReport,
         notifications: notificationResults,
         metadata: {
           subscriberCount: subscribers.length,
@@ -127,7 +164,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
     return {
       status: "success",
       competitor,
-      report,
+      enrichedReport,
       metadata: {
         subscriberCount: 0,
         message: "No subscribers found for this competitor",
@@ -160,6 +197,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
       competitorService,
       subscriptionService,
       diffService,
+      aiService,
       notificationService,
     };
   }
