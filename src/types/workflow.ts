@@ -1,3 +1,5 @@
+// src/types/workflow.ts
+
 // Define the parameters our workflow expects
 type ScreenshotDiffWorkflowParams = {
   url: string;

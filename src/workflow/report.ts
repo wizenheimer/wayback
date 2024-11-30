@@ -1,4 +1,9 @@
-import { WorkflowEntrypoint, WorkflowEvent, WorkflowStep } from "cloudflare:workers";
+// src/workflow/report.ts
+import {
+  WorkflowEntrypoint,
+  WorkflowEvent,
+  WorkflowStep,
+} from "cloudflare:workers";
 import { Bindings } from "../types/core";
 import { NonRetryableError } from "cloudflare:workflows";
 import { reportToEmailParams } from "../utils/email";
