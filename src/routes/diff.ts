@@ -14,6 +14,7 @@ import {
 } from "../schema";
 import { zValidator } from "@hono/zod-validator";
 import { initializeServices } from "../utils/initializer";
+import { log } from "../utils/log";
 
 // =======================================================
 //              Diff Analysis Endpoints
@@ -31,7 +32,10 @@ diffServiceRouter.post(
     try {
       const { url, runId1, runId2, weekNumber1, weekNumber2 } =
         await c.req.json();
+      log("Diff analysis request received", { url, runId1, runId2 });
+
       const { diffService } = initializeServices(c);
+      log("Diff service initialized with storage and AI services");
 
       const result = await diffService.createDiff({
         url,
@@ -40,6 +44,7 @@ diffServiceRouter.post(
         weekNumber1,
         weekNumber2,
       });
+      log("Diff analysis completed with", result);
 
       return c.json({
         status: "success",

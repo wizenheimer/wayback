@@ -14,6 +14,7 @@ import {
 } from "../schema";
 import { getWeekNumber } from "../utils/path";
 import { Bindings } from "../types/core";
+import { log } from "../utils/log";
 // =======================================================
 //                Workflow Service Endpoints
 // =======================================================
@@ -29,6 +30,7 @@ workflowServiceRouter.post(
 
       // Use provided week number or get current week
       const weekNumber = requestedWeek || getWeekNumber();
+      log("Recieved params for diff workflow", url, runId, weekNumber);
 
       // Create workflow instance
       const instance = await c.env.SCREENSHOT_DIFF_WORKFLOW.create({
@@ -71,6 +73,7 @@ workflowServiceRouter.post(
   async (c) => {
     try {
       const input = await c.req.json();
+      log("Recieved params for reporting", input);
 
       // Create workflow instance
       const instance = await c.env.COMPETITOR_REPORT_WORKFLOW.create({
@@ -106,6 +109,7 @@ workflowServiceRouter.get(
   zValidator("query", workflowStatusQuerySchema),
   async (c) => {
     const { id, workflowType } = c.req.valid("query");
+    log("Received params for status endpoint", id, workflowType);
 
     try {
       if (workflowType === "diff") {

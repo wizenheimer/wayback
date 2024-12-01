@@ -6,6 +6,7 @@ import { notifyEndpoint } from "../constants";
 import { zValidator } from "@hono/zod-validator";
 import { notificationSchema } from "../schema";
 import { initializeServices } from "../utils/initializer";
+import { log } from "../utils/log";
 
 const notificationServiceRouter = new Hono<{ Bindings: Bindings }>();
 
@@ -18,9 +19,12 @@ notificationServiceRouter.post(
   async (c) => {
     try {
       const input = await c.req.json();
+      log("Notification request received", input);
+
       const { notificationService } = initializeServices(c);
 
       const results = await notificationService.sendNotification(input);
+      log("Send notification successfully");
 
       return c.json({
         status: "success",

@@ -18,6 +18,7 @@ import {
   updateCompetitorSchema,
 } from "../schema";
 import { initializeServices } from "../utils/initializer";
+import { log } from "../utils/log";
 // ===============================================================
 //                  Competitor Management - Aggregate
 //
@@ -164,9 +165,13 @@ competitorServiceRouter.get(listCompetitorsbyHash, async (c) => {
 competitorServiceRouter.get(getCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
+    log("Getting competitor by ID:", id);
+
     const { competitorService } = initializeServices(c);
+    log("Competitor service initialized");
 
     const result = await competitorService.getCompetitor(id);
+    log("Got competitor lookup result:", result);
 
     if (!result) {
       return c.json(
@@ -177,6 +182,7 @@ competitorServiceRouter.get(getCompetitorEndpoint, async (c) => {
         404
       );
     }
+    log("Returning competitor data");
 
     return c.json({
       status: "success",
@@ -200,13 +206,23 @@ competitorServiceRouter.post(
   updateCompetitorURLEndpoint,
   zValidator("json", addUrlSchema),
   async (c) => {
+    log("Adding URL to competitor");
     try {
       const competitorId = parseInt(c.req.param("id"));
       const { url } = await c.req.json<AddUrlInput>();
+      log("Competitor ID and URL:", competitorId, url);
+
       const { competitorService } = initializeServices(c);
 
       // Add URL
       const newUrl = await competitorService.addUrl(competitorId, url);
+      log(
+        "Added URL:",
+        newUrl,
+        "to competitor ID:",
+        competitorId,
+        "successfully"
+      );
 
       return c.json({
         status: "success",
@@ -254,6 +270,7 @@ competitorServiceRouter.delete(updateCompetitorURLEndpoint, async (c) => {
   try {
     const competitorId = parseInt(c.req.param("id"));
     const url = c.req.query("url");
+    log("Removing URL from competitor:", competitorId, url);
 
     if (!url) {
       return c.json(
@@ -269,6 +286,7 @@ competitorServiceRouter.delete(updateCompetitorURLEndpoint, async (c) => {
 
     // Remove URL
     await competitorService.removeUrl(competitorId, url);
+    log("Removed URL:", url, "from competitor ID:", competitorId);
 
     return c.json({
       status: "success",
@@ -318,9 +336,12 @@ competitorServiceRouter.put(
     try {
       const id = parseInt(c.req.param("id"));
       const input = await c.req.json();
+      log("Updating competitor ID:", id, "with data:", input);
+
       const { competitorService } = initializeServices(c);
 
       const result = await competitorService.updateCompetitor(id, input);
+      log("Updated competitor data:", result, "id:", id, "input:", input);
 
       return c.json({
         status: "success",
@@ -346,9 +367,12 @@ competitorServiceRouter.put(
 competitorServiceRouter.delete(deleteCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
+    log("Deleting competitor ID:", id);
+
     const { competitorService } = initializeServices(c);
 
     await competitorService.deleteCompetitor(id);
+    log("Deleted competitor ID:", id);
 
     return c.json({
       status: "success",

@@ -4,6 +4,7 @@ import { subscribeCompetitorEndpoint } from "../constants";
 import { zValidator } from "@hono/zod-validator";
 import { subscriptionSchema } from "../schema";
 import { initializeServices } from "../utils/initializer";
+import { log } from "../utils/log";
 
 // =======================================================
 //                Subscription Service Endpoints
@@ -20,11 +21,14 @@ subscriptionServiceRouter.post(
     try {
       const id = parseInt(c.req.param("id"));
       const { email } = await c.req.json();
+      log("Received subscription params", id, email);
 
       const { subscriptionService, competitorService } = initializeServices(c);
 
       // Verify competitor exists
       const competitor = await competitorService.getCompetitor(id);
+      log("Got competitor object", competitor);
+
       if (!competitor) {
         return c.json(
           {
@@ -36,6 +40,7 @@ subscriptionServiceRouter.post(
       }
 
       const subscription = await subscriptionService.subscribe(id, email);
+      log("Got subscription object", subscription);
 
       return c.json({
         status: "success",
@@ -73,6 +78,7 @@ subscriptionServiceRouter.delete(subscribeCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
     const email = c.req.query("email");
+    log("Received params for subscription deletion", id, email);
 
     if (!email) {
       return c.json(
@@ -88,6 +94,8 @@ subscriptionServiceRouter.delete(subscribeCompetitorEndpoint, async (c) => {
 
     // Verify competitor exists
     const competitor = await competitorService.getCompetitor(id);
+    log("Queried competitor", competitor);
+
     if (!competitor) {
       return c.json(
         {
@@ -99,6 +107,7 @@ subscriptionServiceRouter.delete(subscribeCompetitorEndpoint, async (c) => {
     }
 
     await subscriptionService.unsubscribe(id, email);
+    log("Unscribed from competitor");
 
     return c.json({
       status: "success",
@@ -120,11 +129,14 @@ subscriptionServiceRouter.delete(subscribeCompetitorEndpoint, async (c) => {
 subscriptionServiceRouter.get(subscribeCompetitorEndpoint, async (c) => {
   try {
     const id = parseInt(c.req.param("id"));
+    log("Got subscription param", id);
 
     const { subscriptionService, competitorService } = initializeServices(c);
 
     // Verify competitor exists
     const competitor = await competitorService.getCompetitor(id);
+    log("Retrieved competitor object", competitor);
+
     if (!competitor) {
       return c.json(
         {
@@ -138,6 +150,7 @@ subscriptionServiceRouter.get(subscribeCompetitorEndpoint, async (c) => {
     const subscribers = await subscriptionService.getSubscribersByCompetitor(
       id
     );
+    log("Got subscribers list", subscribers);
 
     return c.json({
       status: "success",

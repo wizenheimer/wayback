@@ -17,6 +17,7 @@ import { ScreenshotOptions } from "../types/screenshot";
 import { DEFAULT_SCREENSHOT_OPTIONS, R2_CONFIG } from "../config";
 import { initializeServices } from "../utils/initializer";
 import { encodeBase64 } from "../utils/encoding";
+import { log } from "../utils/log";
 
 // =======================================================
 //               Screenshot Service Router
@@ -33,6 +34,7 @@ screenshotServiceRouter.post(
     try {
       const userOptions = await c.req.json<ScreenshotOptions>();
       const { runId } = userOptions;
+      log("Received screenshot options", userOptions, "with runID", runId);
 
       if (!runId) {
         return c.json(
@@ -45,9 +47,12 @@ screenshotServiceRouter.post(
       }
 
       const options = { ...DEFAULT_SCREENSHOT_OPTIONS, ...userOptions };
+      log("Capturing screenshot with options", options);
+
       const { screenshotService } = initializeServices(c);
 
       const result = await screenshotService.takeScreenshot(options);
+      log("Stored result for screenshot", result);
 
       return c.json({
         status: "success",
@@ -78,6 +83,7 @@ screenshotServiceRouter.get(
     try {
       const { hash, weekNumber, runId } = c.req.valid("param");
       const { format } = c.req.valid("query");
+      log("Retrieved content with params ", hash, weekNumber, runId, format);
 
       const { screenshotService } = initializeServices(c);
       const object = await screenshotService.getScreenshotImage(
@@ -85,6 +91,7 @@ screenshotServiceRouter.get(
         weekNumber,
         runId
       );
+      log("Retrieved R2 object ", object);
 
       if (!object) {
         return c.json(
@@ -149,6 +156,7 @@ screenshotServiceRouter.get(
   async (c) => {
     try {
       const { hash, weekNumber, runId } = c.req.valid("param");
+      log("Received options for screenshot query", hash, weekNumber, runId);
 
       const { screenshotService } = initializeServices(c);
       const object = await screenshotService.getScreenshotContent(
@@ -156,6 +164,7 @@ screenshotServiceRouter.get(
         weekNumber,
         runId
       );
+      log("Retrieved object from screenshot archive", object);
 
       if (!object) {
         return c.json(
@@ -168,6 +177,7 @@ screenshotServiceRouter.get(
       }
 
       const content = await object.text();
+      log("Retrieved content of size", content.length);
 
       return c.json({
         status: "success",
