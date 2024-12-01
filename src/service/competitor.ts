@@ -57,6 +57,23 @@ export class CompetitorService {
     `
       )
       .run();
+
+    // Add subscription table with competitor_id and email
+    await this.db
+      .prepare(
+        `
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        competitor_id INTEGER NOT NULL,
+        email TEXT NOT NULL,
+        status TEXT CHECK(status IN ('active', 'unsubscribed')) NOT NULL DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (competitor_id) REFERENCES competitors (id) ON DELETE CASCADE,
+        UNIQUE (competitor_id, email)
+      )
+    `
+      )
+      .run();
   }
 
   async createCompetitor(
