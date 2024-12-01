@@ -1,5 +1,4 @@
 // src/schema.ts
-
 import { z } from "zod";
 import { BlockableResources, IpCountries, Timezones } from "./types/screenshot";
 
@@ -133,6 +132,8 @@ const diffRequestSchema = z.object({
   url: z.string().url(),
   runId1: z.string(),
   runId2: z.string(),
+  weekNumber1: z.string().length(2).regex(/^\d+$/),
+  weekNumber2: z.string().length(2).regex(/^\d+$/),
 });
 
 const historyQuerySchema = z.object({
