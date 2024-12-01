@@ -71,7 +71,7 @@ export default {
     ctx: ExecutionContext
   ) {
     // Use if-else instead of switch-case for cron matching
-    if (controller.cron === "0 0 * * 0") {
+    if (controller.cron === "0 0 * * SUN") {
       // Day: Sunday
       // Trigger the screenshot diff workflow with runID 1
       console.log("Triggering screenshot diff workflow with runID 1");
@@ -84,7 +84,7 @@ export default {
           { delaySeconds: 60 }
         )
       );
-    } else if (controller.cron === "0 0 * * 6") {
+    } else if (controller.cron === "0 0 * * SAT") {
       // Day: Saturday
       // Trigger the screenshot diff workflow with runID 7
       console.log("Triggering screenshot diff workflow with runID 7");
@@ -133,7 +133,7 @@ export default {
 
         // Process the message based on the type
         let workflowEvent;
-        if (batch.queue === "diff_queue") {
+        if (batch.queue === "diff-queue") {
           const { url, runId } = msg;
           workflowEvent = env.SCREENSHOT_DIFF_WORKFLOW.create({
             params: {
@@ -141,7 +141,7 @@ export default {
               runId: runId,
             },
           });
-        } else if (batch.queue === "report_queue") {
+        } else if (batch.queue === "report-queue") {
           const { competitorID, runId1, runId2, weekNumber } = msg;
           workflowEvent = env.COMPETITOR_REPORT_WORKFLOW.create({
             params: {

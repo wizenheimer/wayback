@@ -138,7 +138,7 @@ class_name = "CompetitorReportWorkflow"
 
 # Trigger binding - Screenshot Diff
 [triggers]
-crons = ["0 0 * * 0", "0 0 * * 6", "0 14 * * 1"]
+crons = ["0 0 * * SUN", "0 0 * * SAT", "0 14 * * 1"]
 
 [[queues.producers]]
 queue = "diff-queue"
