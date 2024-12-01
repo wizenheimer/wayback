@@ -70,66 +70,62 @@ export default {
     env: Bindings,
     ctx: ExecutionContext
   ) {
-    switch (controller.cron) {
-      case "0 0 * * 0":
-        // Day: Sunday
-        // Trigger the screenshot diff workflow with runID 1
-        console.log("Triggering screenshot diff workflow with runID 1");
-        ctx.waitUntil(
-          env.diff_queue.send(
-            {
-              url: "https://commonroom.io",
-              runId: 1,
-            },
-            { delaySeconds: 60 }
-          )
-        );
-
-      case "0 0 * * 6":
-        // Day: Saturday
-        // Trigger the screenshot diff workflow with runID 7
-        console.log("Triggering screenshot diff workflow with runID 7");
-        ctx.waitUntil(
-          env.diff_queue.send(
-            {
-              url: "https://commonroom.io",
-              runId: 7,
-            },
-            { delaySeconds: 60 }
-          )
-        );
-
-      case "0 14 * * 1":
-        // Day: Monday
-        // US East: 9:00 AM EST (start of week)
-        // US West: 6:00 AM PST (early morning)
-        // UK: 2:00 PM GMT (afternoon)
-        // Europe: 3:00 PM CET (afternoon)
-        // India: 7:30 PM IST (evening)
-        // China/Singapore: 10:00 PM CST/SGT (night)
-        console.log("Triggering competitor report workflow");
-        const previousWeekNumber = String(
-          getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
-        );
-        ctx.waitUntil(
-          env.report_queue.send(
-            {
-              competitorID: 1,
-              runId1: 1,
-              runId2: 7,
-              weekNumber: previousWeekNumber,
-            },
-            { delaySeconds: 60 }
-          )
-        );
-
-      default:
-        console.error(`No scheduled event found for ${controller.cron}`);
+    // Use if-else instead of switch-case for cron matching
+    if (controller.cron === "0 0 * * 0") {
+      // Day: Sunday
+      // Trigger the screenshot diff workflow with runID 1
+      console.log("Triggering screenshot diff workflow with runID 1");
+      ctx.waitUntil(
+        env.diff_queue.send(
+          {
+            url: "https://commonroom.io",
+            runId: 1,
+          },
+          { delaySeconds: 60 }
+        )
+      );
+    } else if (controller.cron === "0 0 * * 6") {
+      // Day: Saturday
+      // Trigger the screenshot diff workflow with runID 7
+      console.log("Triggering screenshot diff workflow with runID 7");
+      ctx.waitUntil(
+        env.diff_queue.send(
+          {
+            url: "https://commonroom.io",
+            runId: 7,
+          },
+          { delaySeconds: 60 }
+        )
+      );
+    } else if (controller.cron === "0 14 * * 1") {
+      // Day: Monday
+      // US East: 9:00 AM EST (start of week)
+      // US West: 6:00 AM PST (early morning)
+      // UK: 2:00 PM GMT (afternoon)
+      // Europe: 3:00 PM CET (afternoon)
+      // India: 7:30 PM IST (evening)
+      // China/Singapore: 10:00 PM CST/SGT (night)
+      console.log("Triggering competitor report workflow");
+      const previousWeekNumber = String(
+        getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
+      );
+      ctx.waitUntil(
+        env.report_queue.send(
+          {
+            competitorID: 1,
+            runId1: 1,
+            runId2: 7,
+            weekNumber: previousWeekNumber,
+          },
+          { delaySeconds: 60 }
+        )
+      );
+    } else {
+      console.error(`No scheduled event found for ${controller.cron}`);
     }
   },
   async queue(batch: MessageBatch<QueueMessage>, env: Bindings): Promise<void> {
     // Process the batch of messages depending on the queue
-
     for (const message of batch.messages) {
       try {
         // Extract the message body
@@ -137,29 +133,26 @@ export default {
 
         // Process the message based on the type
         let workflowEvent;
-        switch (batch.queue) {
-          case "diff_queue": {
-            const { url, runId } = msg;
-            workflowEvent = env.SCREENSHOT_DIFF_WORKFLOW.create({
-              params: {
-                url: url,
-                runId: runId,
-              },
-            });
-          }
-          case "report_queue": {
-            const { competitorID, runId1, runId2, weekNumber } = msg;
-            workflowEvent = env.COMPETITOR_REPORT_WORKFLOW.create({
-              params: {
-                competitorID: competitorID,
-                runId1: runId1,
-                runId2: runId2,
-                weekNumber: weekNumber,
-              },
-            });
-          }
-          default:
-            console.error("No handler for queue message");
+        if (batch.queue === "diff_queue") {
+          const { url, runId } = msg;
+          workflowEvent = env.SCREENSHOT_DIFF_WORKFLOW.create({
+            params: {
+              url: url,
+              runId: runId,
+            },
+          });
+        } else if (batch.queue === "report_queue") {
+          const { competitorID, runId1, runId2, weekNumber } = msg;
+          workflowEvent = env.COMPETITOR_REPORT_WORKFLOW.create({
+            params: {
+              competitorID: competitorID,
+              runId1: runId1,
+              runId2: runId2,
+              weekNumber: weekNumber,
+            },
+          });
+        } else {
+          console.error("No handler for queue message");
         }
 
         // Acknowledge the message and wait for the workflow to complete
