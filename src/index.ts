@@ -22,6 +22,8 @@ import competitorServiceRouter from "./routes/competitor";
 import diffServiceRouter from "./routes/diff";
 import subscriptionServiceRouter from "./routes/subscription";
 import { getWeekNumber } from "./utils/path";
+import { initializeServices } from "./utils/initializer";
+import { CompetitorService } from "./service/competitor";
 
 // =======================================================
 //              Initialize Hono
@@ -64,7 +66,115 @@ app.route(workflowBaseEndpoint, workflowServiceRouter);
 // =======================================================
 
 export default {
+  // map fetch function to app.fetch
   fetch: app.fetch,
+  // Batch trigger the screenshot diff workflow for all competitors
+  // This function is scheduled to run every Sunday at 12:00 AM EST
+  // and every Saturday at 12:00 AM EST
+  async batchTriggerDiffWorkflow(
+    runID: number,
+    env: Bindings,
+    ctx: ExecutionContext,
+    batchSize: number = 10,
+    offset: number = 0
+  ) {
+    let hasMore = true;
+    const competitorService = new CompetitorService(env.COMPETITOR_DB);
+
+    while (hasMore) {
+      // Fetch batch of URLs
+      const { urls } = await competitorService.listCompetitorUrls({
+        limit: batchSize,
+        offset,
+      });
+
+      // If we got fewer URLs than requested, this is the last batch
+      if (urls.length < batchSize) {
+        hasMore = false;
+      }
+
+      // Calculate batch delay (60 seconds per batch)
+      const batchDelay = 60 * Math.floor(offset / batchSize);
+
+      // Process current batch
+      const promises = urls.map(({ url }, index) =>
+        ctx.waitUntil(
+          env.diff_queue.send(
+            {
+              url: url,
+              runId: runID,
+            },
+            {
+              delaySeconds: batchDelay,
+            }
+          )
+        )
+      );
+
+      // Wait for all operations in current batch to be queued
+      await Promise.all(promises);
+
+      // Only increment offset if we're not done
+      if (hasMore) {
+        offset += batchSize;
+      }
+    }
+  },
+  // Batch trigger the report workflow for all competitors
+  // This function is scheduled to run every Monday at 9:00 AM EST
+  async batchTriggerReportWorkflow(
+    env: Bindings,
+    ctx: ExecutionContext,
+    batchSize: number = 10,
+    offset: number = 0
+  ) {
+    let hasMore = true;
+    const competitorService = new CompetitorService(env.COMPETITOR_DB);
+
+    const previousWeekNumber = String(
+      getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
+    );
+
+    while (hasMore) {
+      // Fetch batch of URLs
+      const { competitors } = await competitorService.listCompetitors({
+        limit: batchSize,
+        offset,
+      });
+
+      // If we got fewer URLs than requested, this is the last batch
+      if (competitors.length < batchSize) {
+        hasMore = false;
+      }
+
+      // Calculate batch delay (60 seconds per batch)
+      const batchDelay = 60 * Math.floor(offset / batchSize);
+
+      // Process current batch
+      const promises = competitors.map(({ id }, index) =>
+        ctx.waitUntil(
+          env.report_queue.send(
+            {
+              competitorId: id,
+              runId1: 1,
+              runId2: 7,
+              weekNumber: previousWeekNumber,
+            },
+            { delaySeconds: batchDelay }
+          )
+        )
+      );
+
+      // Wait for all operations in current batch to be queued
+      await Promise.all(promises);
+
+      // Only increment offset if we're not done
+      if (hasMore) {
+        offset += batchSize;
+      }
+    }
+  },
+  // Scheduled function to trigger workflows based on cron schedule
   async scheduled(
     controller: ScheduledController,
     env: Bindings,
@@ -75,28 +185,12 @@ export default {
       case "0 0 * * SUN":
         // Day: Sunday
         // Trigger the screenshot diff workflow with runID 1
-        ctx.waitUntil(
-          env.diff_queue.send(
-            {
-              url: "https://commonroom.io",
-              runId: 1,
-            },
-            { delaySeconds: 60 }
-          )
-        );
+        await this.batchTriggerDiffWorkflow(1, env, ctx);
 
       case "0 0 * * SAT":
         // Day: Saturday
         // Trigger the screenshot diff workflow with runID 7
-        ctx.waitUntil(
-          env.diff_queue.send(
-            {
-              url: "https://commonroom.io",
-              runId: 7,
-            },
-            { delaySeconds: 60 }
-          )
-        );
+        await this.batchTriggerDiffWorkflow(7, env, ctx);
 
       case "0 14 * * 1":
         // Day: Monday
@@ -106,22 +200,11 @@ export default {
         // Europe: 3:00 PM CET (afternoon)
         // India: 7:30 PM IST (evening)
         // China/Singapore: 10:00 PM CST/SGT (night)
-        const previousWeekNumber = String(
-          getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
-        );
-        ctx.waitUntil(
-          env.report_queue.send(
-            {
-              competitorId: 1,
-              runId1: 1,
-              runId2: 7,
-              weekNumber: previousWeekNumber,
-            },
-            { delaySeconds: 60 }
-          )
-        );
+        await this.batchTriggerReportWorkflow(env, ctx);
     }
   },
+  // Queue message handler
+  // This function is triggered whenever a message is sent to the queue
   async queue(batch: MessageBatch<QueueMessage>, env: Bindings): Promise<void> {
     // Process the batch of messages depending on the queue
     for (const message of batch.messages) {
@@ -129,6 +212,7 @@ export default {
         // Extract the message body
         const msg = message.body;
 
+        // Check the queue name to determine the workflow to trigger
         // Process the message based on the type
         let workflowEvent;
         if (batch.queue === "diff-queue") {
