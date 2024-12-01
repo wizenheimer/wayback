@@ -212,7 +212,6 @@ export const reportToEmailParams = (
     .split("/")
     .join("");
 
-
   return {
     kind: "diff-report",
     competitor: enrichedReport.metadata.competitor,

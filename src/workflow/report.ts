@@ -15,6 +15,7 @@ import { DiffService } from "../service/diff";
 import { CompetitorService } from "../service/competitor";
 import { SubscriptionService } from "../service/subscription";
 import { NotificationService } from "../service/notification";
+import { log } from "../utils/log";
 
 export class CompetitorReportWorkflow extends WorkflowEntrypoint<
   Bindings,
@@ -25,6 +26,13 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
     step: WorkflowStep
   ) {
     const { competitorId, runId1, runId2, weekNumber } = event.payload;
+    log(
+      "Received params for competitor report workflow",
+      competitorId,
+      runId1,
+      runId2,
+      weekNumber
+    );
 
     // Step 1: Get competitor details and subscribers
     const { competitor } = await step.do(
@@ -43,6 +51,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
         // Get competitor details
         const competitor = await competitorService.getCompetitor(competitorId);
         if (!competitor) {
+          log("Competitor not found", competitorId);
           throw new NonRetryableError(
             `Competitor with ID ${competitorId} not found`
           );
@@ -68,6 +77,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
         // Get subscriber emails
         const subscribers =
           await subscriptionService.getSubscribersByCompetitor(competitorId);
+        log("Found subscribers for competitor", subscribers.length);
 
         return { subscribers };
       }
@@ -87,6 +97,14 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
       async () => {
         const { diffService } = this.initializeServices();
 
+        log(
+          "Generating report for competitor",
+          competitor.name,
+          competitor.urls,
+          runId1,
+          runId2,
+          weekNumber
+        );
         const report = await diffService.generateReport({
           urls: competitor.urls,
           runId1,
@@ -95,6 +113,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
           competitor: competitor.name,
           enriched: false, // Enable AI summaries
         });
+        log("Generated report", report);
 
         return report;
       }
@@ -115,6 +134,7 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
         const { aiService } = this.initializeServices();
 
         const enrichedReport = await aiService.enrichReport(rawReport);
+        log("Enriched report", enrichedReport);
 
         return enrichedReport;
       }
@@ -136,11 +156,14 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
           const { notificationService } = this.initializeServices();
           const emailReport = reportToEmailParams(enrichedReport);
 
+          log("Sending notification to subscribers");
+
           const results = await notificationService.sendNotification({
             templateId: "diff-report",
             emailTemplateParams: emailReport,
             emails: subscribers,
           });
+          log("Notification sent");
 
           return results;
         }

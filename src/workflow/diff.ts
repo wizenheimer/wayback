@@ -12,6 +12,7 @@ import { ScreenshotService } from "../service/screenshot";
 import { DBService } from "../service/db";
 import { AIService } from "../service/ai";
 import { DiffService } from "../service/diff";
+import { log } from "../utils/log";
 
 export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
   Bindings,
@@ -27,6 +28,15 @@ export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
     const { comparisonWeek, comparisonRunId } = this.getComparisonDetails(
       weekNumber,
       runId
+    );
+
+    log(
+      "Received params for diff workflow",
+      url,
+      runId,
+      weekNumber,
+      comparisonWeek,
+      comparisonRunId
     );
 
     // Step 1: Take and store screenshot
@@ -51,9 +61,11 @@ export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
         });
 
         if (!result.paths) {
+          log("Screenshot failed: No paths returned");
           throw new Error("Screenshot failed: No paths returned");
         }
 
+        log("Screenshot taken and stored successfully", result.paths);
         return result;
       }
     );
@@ -82,7 +94,9 @@ export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
             weekNumber1: comparisonWeek,
             weekNumber2: weekNumber,
           });
+          log("Diff analysis completed successfully", result);
         } catch (error) {
+          log("Diff analysis failed", error);
           if (error instanceof Error) {
             // Check the error message
             switch (error.message) {
@@ -103,6 +117,7 @@ export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
         }
 
         if (!result?.differences) {
+          log("No differences detected between versions");
           throw new NonRetryableError(
             "No differences detected between versions"
           );
