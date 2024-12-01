@@ -22,14 +22,12 @@ export class ScreenshotDiffWorkflow extends WorkflowEntrypoint<
     step: WorkflowStep
   ) {
     const { url, runId, weekNumber } = event.payload;
-    console.log("Running workflow for:", url, runId, weekNumber);
 
     // Calculate comparison week and run ID
     const { comparisonWeek, comparisonRunId } = this.getComparisonDetails(
       weekNumber,
       runId
     );
-    console.log("Comparison details:", comparisonWeek, comparisonRunId);
 
     // Step 1: Take and store screenshot
     const screenshotResult = await step.do(

@@ -23,14 +23,14 @@ export type Bindings = {
   COMPETITOR_REPORT_WORKFLOW: Workflow;
 
   // Queue Bindings
-  diff_queue: Queue;
-  report_queue: Queue;
+  diff_queue: Queue<QueueMessage>;
+  report_queue: Queue<QueueMessage>;
 };
 
 export interface QueueMessage {
   url?: string;
-  runId: number;
-  competitorID?: number;
+  runId?: number;
+  competitorId?: number;
   runId1?: number;
   runId2?: number;
   weekNumber?: string;

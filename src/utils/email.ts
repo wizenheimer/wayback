@@ -193,9 +193,6 @@ export const reportToEmailParams = (
   const toDateOffset =
     Math.min(Number.parseInt(enrichedReport.metadata.runRange.toRun), 7) || 7;
 
-  console.log("fromDateOffset", fromDateOffset);
-  console.log("toDateOffset", toDateOffset);
-  console.log("weekNumber", weekNumber);
   // Have date without time
   const fromDate = getDateFromWeek(weekNumber, 2024, fromDateOffset)
     .toLocaleDateString("en-GB", {
@@ -215,8 +212,6 @@ export const reportToEmailParams = (
     .split("/")
     .join("");
 
-  console.log("fromDate", fromDate);
-  console.log("toDate", toDate);
 
   return {
     kind: "diff-report",

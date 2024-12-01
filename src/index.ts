@@ -71,57 +71,55 @@ export default {
     ctx: ExecutionContext
   ) {
     // Use if-else instead of switch-case for cron matching
-    if (controller.cron === "0 0 * * SUN") {
-      // Day: Sunday
-      // Trigger the screenshot diff workflow with runID 1
-      console.log("Triggering screenshot diff workflow with runID 1");
-      ctx.waitUntil(
-        env.diff_queue.send(
-          {
-            url: "https://commonroom.io",
-            runId: 1,
-          },
-          { delaySeconds: 60 }
-        )
-      );
-    } else if (controller.cron === "0 0 * * SAT") {
-      // Day: Saturday
-      // Trigger the screenshot diff workflow with runID 7
-      console.log("Triggering screenshot diff workflow with runID 7");
-      ctx.waitUntil(
-        env.diff_queue.send(
-          {
-            url: "https://commonroom.io",
-            runId: 7,
-          },
-          { delaySeconds: 60 }
-        )
-      );
-    } else if (controller.cron === "0 14 * * 1") {
-      // Day: Monday
-      // US East: 9:00 AM EST (start of week)
-      // US West: 6:00 AM PST (early morning)
-      // UK: 2:00 PM GMT (afternoon)
-      // Europe: 3:00 PM CET (afternoon)
-      // India: 7:30 PM IST (evening)
-      // China/Singapore: 10:00 PM CST/SGT (night)
-      console.log("Triggering competitor report workflow");
-      const previousWeekNumber = String(
-        getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
-      );
-      ctx.waitUntil(
-        env.report_queue.send(
-          {
-            competitorID: 1,
-            runId1: 1,
-            runId2: 7,
-            weekNumber: previousWeekNumber,
-          },
-          { delaySeconds: 60 }
-        )
-      );
-    } else {
-      console.error(`No scheduled event found for ${controller.cron}`);
+    switch (controller.cron) {
+      case "0 0 * * SUN":
+        // Day: Sunday
+        // Trigger the screenshot diff workflow with runID 1
+        ctx.waitUntil(
+          env.diff_queue.send(
+            {
+              url: "https://commonroom.io",
+              runId: 1,
+            },
+            { delaySeconds: 60 }
+          )
+        );
+
+      case "0 0 * * SAT":
+        // Day: Saturday
+        // Trigger the screenshot diff workflow with runID 7
+        ctx.waitUntil(
+          env.diff_queue.send(
+            {
+              url: "https://commonroom.io",
+              runId: 7,
+            },
+            { delaySeconds: 60 }
+          )
+        );
+
+      case "0 14 * * 1":
+        // Day: Monday
+        // US East: 9:00 AM EST (start of week)
+        // US West: 6:00 AM PST (early morning)
+        // UK: 2:00 PM GMT (afternoon)
+        // Europe: 3:00 PM CET (afternoon)
+        // India: 7:30 PM IST (evening)
+        // China/Singapore: 10:00 PM CST/SGT (night)
+        const previousWeekNumber = String(
+          getWeekNumber(new Date(new Date().setDate(new Date().getDate() - 7)))
+        );
+        ctx.waitUntil(
+          env.report_queue.send(
+            {
+              competitorId: 1,
+              runId1: 1,
+              runId2: 7,
+              weekNumber: previousWeekNumber,
+            },
+            { delaySeconds: 60 }
+          )
+        );
     }
   },
   async queue(batch: MessageBatch<QueueMessage>, env: Bindings): Promise<void> {
@@ -142,10 +140,10 @@ export default {
             },
           });
         } else if (batch.queue === "report-queue") {
-          const { competitorID, runId1, runId2, weekNumber } = msg;
+          const { competitorId, runId1, runId2, weekNumber } = msg;
           workflowEvent = env.COMPETITOR_REPORT_WORKFLOW.create({
             params: {
-              competitorID: competitorID,
+              competitorId: competitorId,
               runId1: runId1,
               runId2: runId2,
               weekNumber: weekNumber,

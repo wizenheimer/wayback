@@ -47,7 +47,6 @@ export class CompetitorReportWorkflow extends WorkflowEntrypoint<
             `Competitor with ID ${competitorId} not found`
           );
         }
-
         return { competitor };
       }
     );
