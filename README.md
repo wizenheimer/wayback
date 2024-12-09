@@ -16,7 +16,7 @@
 
 ## What is Wayback?
 
-Wayback is a lightweight, open-source service that powers Byrd's competitive intelligence platform. It captures website changes, analyzes differences, and provides structured data about how sites evolve over time.
+Wayback is a lightweight, open-source service that powers [Byrd's competitive intelligence](byrdhq.com) platform. It captures website changes, analyzes differences, and provides structured data about how sites evolve over time.
 
 The entire project runs on Cloudflare's edge network, using `Workers` for compute, `R2` for storage, `D1` for data, `Queue`, `Workflow` and `Cron` for queueing and workflow management. We built it to be small, focused, and easy to understand.
 
