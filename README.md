@@ -1,18 +1,30 @@
-# Wayback
-
-A minimalist engine for tracking competitors over time. Built entirely with Cloudflare's edge network.
+<div align="center">
+  <h3 align="center">Wayback</h3>
+  <p align="center">
+    A minimalist engine for keeping tabs on your competitors.
+    <br />
+    Built entirely with Cloudflare's edge network.
+    <br />
+    <a href="https://github.com/wizenheimer/wayback/tree/main/docs"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/wizenheimer/wayback/issues/new">Report Bug</a>
+    ·
+    <a href="https://github.com/wizenheimer/wayback/issues/new">Request Feature</a>
+  </p>
+</div>
 
 ## What is Wayback?
 
 Wayback is a lightweight, open-source service that powers Byrd's competitive intelligence platform. It captures website changes, analyzes differences, and provides structured data about how sites evolve over time.
 
-The entire system runs on Cloudflare's edge network, using Workers for compute, R2 for storage, and D1 for data. We built it to be small, focused, and easy to understand.
+The entire project runs on Cloudflare's edge network, using `Workers` for compute, `R2` for storage, `D1` for data, `Queue`, `Workflow` and `Cron` for queueing and workflow management. We built it to be small, focused, and easy to understand.
 
 ## Core Design
 
-![Architecture](docs/architecture.png)
+Wayback follows a simple principle: capture website changes reliably and make the changes accessible to user. The system consists of five small services that work together:
 
-Wayback follows a simple principle: capture website changes reliably and make the data easy to analyze. The system consists of five small services that work together:
+![Architecture](docs/architecture.png)
 
 ### Screenshot Service
 
@@ -69,16 +81,7 @@ interface NotificationRequest<T> {
 
 ### Inbox Service
 
-Manages message delivery:
-
-```typescript
-interface Message {
-  id: string;
-  type: string;
-  content: any;
-  status: "pending" | "sent" | "failed";
-}
-```
+Manages message delivery
 
 ## Getting Started
 
@@ -87,7 +90,7 @@ You'll need a Cloudflare Workers account with D1 and R2 access. Here's how to se
 1. Clone and install:
 
 ```bash
-git clone https://github.com/yourusername/wayback.git
+git clone https://github.com/wizenheimer/wayback.git
 cd wayback
 npm install
 ```
@@ -249,16 +252,4 @@ We keep external dependencies minimal:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
-
-## Thanks
-
-Built with care by the Byrd team. Special thanks to:
-
-- Cloudflare Workers team for the excellent edge computing platform
-- Screenshot One team for the reliable capture service
-- OpenAI team for the text analysis capabilities
-
----
-
-Questions or feedback? Open an issue or send us a note at hey@byrd.com
+MIT License - see [LICENSE](LICENSE) for more details.
